@@ -1,10 +1,10 @@
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.11
 MAINTAINER Hide <padocon@naver.com>
 
 COPY . /home
 WORKDIR /home
 ENV ENV=dev
-RUN pip install "poetry==1.2.1"
+RUN pip install "poetry==1.6.0"
 RUN poetry config virtualenvs.create false \
     && poetry install --no-dev
 ENV DOCKERIZE_VERSION v0.6.1
