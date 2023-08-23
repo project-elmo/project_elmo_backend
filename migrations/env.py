@@ -29,6 +29,7 @@ fileConfig(config.config_file_name)
 # For auto generate schemas
 from core.config import config
 from app.user.models import *
+from app.training.models import *
 
 target_metadata = Base.metadata
 
@@ -53,7 +54,12 @@ def run_migrations_offline():
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        compare_type=True,
+        include_schemas=True,
     )
+
+    # Refresh Alembic's metadata cache
+    context.refresh()
 
     with context.begin_transaction():
         context.run_migrations()
@@ -71,7 +77,10 @@ async def run_migrations_online():
     In this scenario we need to create an Engine
     and associate a connection with the context.
     """
-    connectable = create_async_engine(config.WRITER_DB_URL, poolclass=pool.NullPool)
+    connectable = create_async_engine(
+        config.WRITER_DB_URL,
+        poolclass=pool.NullPool,
+    )
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
