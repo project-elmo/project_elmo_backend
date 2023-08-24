@@ -11,6 +11,7 @@ pydantic-settings = "^2.0.3"
 SQLAlchemy = {extras = ["asyncio"], version = "^2.0.20"}
 huggingface_hub = "^0.16.4"
 transformers = "^4.31.0"
+torch = "^2.0.1"
 PyJWT = "^2.8.0"
 uvicorn = "^0.23.2"
 fastapi = "^0.101.1"
