@@ -11,6 +11,7 @@ from app.training.llm.model_trainer import train_model
 from app.training.download import download, hub_download
 from app.training.schemas.training import (
     ProgressResponseSchema,
+    TrainingParameterRequestSchema,
 )
 from core.fastapi.dependencies import PermissionDependency, AllowAll
 from core.helpers.cache import Cache
@@ -35,6 +36,19 @@ async def start_hub_download(
     background_tasks.add_task(Cache.delete_startswith, task_key)
 
     return Response(status_code=200, content="Download in progress!")
+
+
+@training_router.post("/training/pretrained_model")
+async def start_training(
+    training_param: TrainingParameterRequestSchema, background_tasks: BackgroundTasks
+):
+    """Initiates a background model training task."""
+    task_key = f"{TASK_PREFIX}{TRAINING}"
+    background_tasks.add_task(Cache.set, task_key, training_param.base_model_name)
+    background_tasks.add_task(train_model, training_param)
+    background_tasks.add_task(Cache.delete_startswith, task_key)
+
+    return Response(status_code=200, content="Training started in the background")
 
 
 @training_router.websocket("/ws/progress/")
