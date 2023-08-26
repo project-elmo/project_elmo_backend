@@ -29,7 +29,7 @@ DOWNLOADING = "downloading"
     responses={"400": {"model": ExceptionResponseSchema}},
 )
 async def list_all_pretrained_models():
-    """Retrieve a list of all fine-tuned models."""
+    """Retrieve a list of all pre-trained models."""
     models = await TrainingService().get_all_pretrained_models()
     return models
 
