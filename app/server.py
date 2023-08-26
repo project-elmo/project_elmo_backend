@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from api import router
 from api.home.home import home_router
 from api.training.training import training_router
+from api.history.history import history_router
 from core.config import config
 from core.exceptions import CustomException
 from core.fastapi.dependencies import Logging
@@ -24,6 +25,7 @@ def init_routers(app_: FastAPI) -> None:
     app_.include_router(home_router)
     app_.include_router(router)
     app_.include_router(training_router, prefix="/api/training")
+    app_.include_router(history_router, prefix="/api/history")
 
 
 def init_listeners(app_: FastAPI) -> None:

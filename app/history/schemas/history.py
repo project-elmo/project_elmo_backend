@@ -3,7 +3,7 @@ from typing import List
 
 
 class PretrainedModelResponseSchema(BaseModel):
-    pm_no: int
+    pm_no: int = 1
     name: str
     description: str
     version: str
@@ -11,7 +11,7 @@ class PretrainedModelResponseSchema(BaseModel):
 
 
 class FinetuningModelResponseSchema(BaseModel):
-    fm_no: int
+    fm_no: int = 5
     user_no: int
     pm_no: int
     ft_model_name: str
@@ -19,7 +19,7 @@ class FinetuningModelResponseSchema(BaseModel):
 
 
 class TrainingSessionResponseSchema(BaseModel):
-    session_no: int
+    session_no: int = 3
     fm_no: int
     parent_session_no: int
     start_time: str
@@ -28,9 +28,9 @@ class TrainingSessionResponseSchema(BaseModel):
 
 
 class TrainingParameterResponseSchema(BaseModel):
-    parameter_no: int
-    session_no: int
-    fm_no: int
+    parameter_no: int = 1
+    session_no: int = 3
+    fm_no: int = 5
     model_name: str
     epochs: int
     save_strategy: str
