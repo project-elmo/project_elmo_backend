@@ -1,5 +1,6 @@
 from typing import List
 from sqlalchemy import select
+from app.training.models.pretrained_model import PretrainedModel
 from core.db import session
 from app.training.models import FinetuningModel, TrainingSession, TrainingParameter
 
@@ -42,6 +43,11 @@ class TrainingService:
         except Exception as e:
             session.rollback()
             raise e
+
+    async def get_all_pretrained_models(self) -> List[PretrainedModel]:
+        query = select(PretrainedModel)
+        result = await session.execute(query)
+        return result.scalars().all()
 
     async def get_all_finetuned_models(self) -> List[FinetuningModel]:
         query = select(FinetuningModel)

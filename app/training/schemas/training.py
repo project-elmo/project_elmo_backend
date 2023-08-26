@@ -2,6 +2,14 @@ from pydantic import BaseModel, ConfigDict
 from typing import List
 
 
+class PretrainedModelResponseSchema(BaseModel):
+    pm_no: int
+    name: str
+    description: str
+    ft_model_name: str
+    base_model: str
+
+
 class FinetuningModelResponseSchema(BaseModel):
     fm_no: int
     user_no: int

@@ -24,6 +24,17 @@ DOWNLOADING = "downloading"
 
 
 @training_router.get(
+    "/pretrained_models/",
+    response_model=List[PretrainedModelResponseSchema],
+    responses={"400": {"model": ExceptionResponseSchema}},
+)
+async def list_all_pretrained_models():
+    """Retrieve a list of all fine-tuned models."""
+    models = await TrainingService().get_all_pretrained_models()
+    return models
+
+
+@training_router.get(
     "/finetuned_models/",
     response_model=List[FinetuningModelResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
