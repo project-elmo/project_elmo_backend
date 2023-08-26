@@ -13,7 +13,7 @@ class PretrainedModel(Base):
         Integer, primary_key=True, autoincrement=True, comment="AUTO_INCREMENT"
     )
     name = Column(String(50), nullable=False)
-    description = Column(String(255), nullable=False)
+    description = Column(String(1000), nullable=False)
     version = Column(String(50), nullable=False)
     base_model = Column(String(255), nullable=False, comment="해당 모델의 베이스모델 명")
     dl_url = Column(String(255), nullable=False)
