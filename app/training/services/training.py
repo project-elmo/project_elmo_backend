@@ -6,7 +6,7 @@ from app.training.models import FinetuningModel, TrainingSession, TrainingParame
 
 
 class TrainingService:
-    async def create_training_data(
+    async def create_finetuning_model(
         self,
         training_param: TrainingParameter,
         fm_name: str,

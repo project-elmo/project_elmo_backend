@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 from typing import Optional
 from fastapi import (
     APIRouter,
@@ -10,6 +11,7 @@ from fastapi import (
 from app.training.llm.model_trainer import train_model
 from app.training.download import hub_download
 from app.training.schemas.training import *
+from app.training.services.training import TrainingService
 from core.fastapi.dependencies import PermissionDependency, AllowAll
 from core.helpers.cache import Cache
 
@@ -37,13 +39,23 @@ async def start_hub_download(
 
 @training_router.post("/training/pretrained_model")
 async def start_training(
-    training_param: TrainingParameterRequestSchema, background_tasks: BackgroundTasks
+    training_param: FinetuningRequestSchema, background_tasks: BackgroundTasks
 ):
     """Initiates a background model training task."""
     task_key = f"{TASK_PREFIX}{TRAINING}"
     background_tasks.add_task(Cache.set, task_key, training_param.base_model_name)
     background_tasks.add_task(train_model, training_param)
     background_tasks.add_task(Cache.delete_startswith, task_key)
+    background_tasks.add_task(
+        TrainingService().create_finetuning_model(
+            training_param=training_param,
+            fm_name=training_param.fm_name,
+            pm_no=training_param.pm_no,
+            start_time=datetime.now(),
+            end_time=datetime.now(),
+            ts_model_name=f"{training_param.fm_name}_{training_param.epochs}",
+        )
+    )
 
     return Response(status_code=200, content="Training started in the background")
 

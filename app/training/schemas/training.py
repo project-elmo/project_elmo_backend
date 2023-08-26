@@ -27,10 +27,11 @@ class ProgressResponseSchema(BaseModel):
         )
 
 
-class TrainingParameterRequestSchema(BaseModel):
+class FinetuningRequestSchema(BaseModel):
     model_config = ConfigDict(protected_namespaces=("model_", "elapsed_", "e"))
-    model_name: str
-    base_model_name: str
+    pm_no: int = 1
+    fm_name: str = "gpt2_chat"
+    base_model_name: str = "gpt2"
     epochs: int = 3
     save_strategy: str = "steps"
     logging_strategy: str = "steps"
@@ -43,4 +44,4 @@ class TrainingParameterRequestSchema(BaseModel):
     save_total_limits: int = -1  # "unlimited" is represented as -1
     run_on_gpu: bool = True
     load_best_at_the_end: bool = False
-    dataset: str
+    dataset: str = ""
