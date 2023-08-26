@@ -25,3 +25,22 @@ class ProgressResponseSchema(BaseModel):
             end_time="00:00",
             sec_per_dl="0.0MB/s",
         )
+
+
+class TrainingParameterRequestSchema(BaseModel):
+    model_config = ConfigDict(protected_namespaces=("model_", "elapsed_", "e"))
+
+    model_name: str
+    epochs: int = 3
+    save_strategy: str = "steps"
+    logging_strategy: str = "steps"
+    evaluation_strategy: str = "no"
+    learning_rate: float = 5.00e-05
+    weight_decay: float = 0.0
+    batch_size: int = 8
+    eval_steps: int = 500
+    save_steps: int = 500
+    save_total_limits: int = -1  # "unlimited" is represented as -1
+    run_on_gpu: bool = True
+    load_best_at_the_end: bool = False
+    dataset: str
