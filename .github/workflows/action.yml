@@ -12,7 +12,7 @@ jobs:
       with:
           ref: dev
     - run: |
-        git pull origin dev
+        git fetch && git pull origin dev
     - name: Deploy dev
       run: |
         sh ~/deploy.sh
