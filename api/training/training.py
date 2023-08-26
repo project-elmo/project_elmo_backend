@@ -57,7 +57,7 @@ async def start_training(
     #     )
     # )
 
-    TrainingService().create_finetuning_model(
+    await TrainingService().create_finetuning_model(
         training_param=training_param,
         fm_name=training_param.fm_name,
         pm_no=training_param.pm_no,
