@@ -15,4 +15,4 @@ jobs:
         git pull origin dev
     - name: Deploy dev
       run: |
-        sh ../deploy.sh
+        sh ~/deploy.sh
