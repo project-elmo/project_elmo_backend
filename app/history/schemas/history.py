@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from pydantic import BaseModel, ConfigDict, root_validator
 from typing import List
 
