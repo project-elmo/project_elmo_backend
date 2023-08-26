@@ -1,4 +1,5 @@
-from pydantic import BaseModel, ConfigDict
+import datetime
+from pydantic import BaseModel, ConfigDict, root_validator
 from typing import List
 
 
@@ -22,8 +23,8 @@ class TrainingSessionResponseSchema(BaseModel):
     session_no: int = 3
     fm_no: int
     parent_session_no: int
-    start_time: str
-    end_time: str
+    start_time: datetime
+    end_time: datetime
     ts_model_name: str
 
 
