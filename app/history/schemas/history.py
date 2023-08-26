@@ -14,7 +14,7 @@ class FinetuningModelResponseSchema(BaseModel):
     fm_no: int = 5
     user_no: int
     pm_no: int
-    ft_model_name: str
+    fm_name: str
     fm_description: str
 
 
