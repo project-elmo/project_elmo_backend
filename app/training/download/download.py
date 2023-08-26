@@ -1,170 +1,114 @@
 import os
-import copy
-import logging
-from typing import BinaryIO, Dict, Optional
-from urllib.parse import urlparse
+import re
 
-import requests
-from requests import Response
-from requests.exceptions import ProxyError, Timeout
+from subprocess import Popen, PIPE
 from transformers import AutoTokenizer
-from tqdm import tqdm
 
-from huggingface_hub.file_download import (
-    logger,
-    http_backoff,
-    hf_hub_url,
-    HTTP_METHOD_T,
-    HEADER_FILENAME_PATTERN,
-)
 from app.training.download.progress import (
-    initialize_progress,
     update_progress,
-    reset_progress,
 )
+from app.training.schemas.training import ProgressResponseSchema
+from core.config import config
 
 
-def download(model_name: str, namespace: str = None, path: str = None):
-    """Download pre-trained model from huggingface."""
-    user_home = os.getcwd()
-    default_path = os.path.join(user_home, "elmo", "models")
-    path = os.path.join(default_path, model_name) if not path else path
-
-    filename = "pytorch_model.bin"
-    file_path = os.path.join(path, filename)
-    os.makedirs(path, exist_ok=True)
-
+def hub_download(model_name: str, namespace: str = None):
+    models_dir = config.MODELS_DIR
+    path = os.path.join(models_dir, model_name)
     repo_id = f"{namespace}/{model_name}" if namespace else model_name
 
-    url_to_download = hf_hub_url(repo_id, filename, repo_type="model")
-    response = get_response(url_to_download)
-    expected_size = int(get_file_size(response))
-
-    if os.path.exists(file_path) and os.path.getsize(file_path) == expected_size:
-        print(f"{file_path} already downloaded")
-        return
-
-    with open(file_path, "wb") as file:
-        http_get_file(url_to_download, file, repo_id, response, expected_size)
+    execute_download(repo_id, path)
 
 
+def execute_download(repo_id, path):
+    script_directory = os.path.dirname(os.path.abspath(__file__))
+
+    cmd = ["python", f"{script_directory}/run_load_model.py", repo_id, path]
+
+    proc = Popen(
+        cmd,
+        stderr=PIPE,
+        universal_newlines=True,
+    )
+    while proc.poll() is None:
+        line = proc.stderr.readline()
+        print("Print:" + line)
+        progress_response = extract_values(line, repo_id)
+        update_progress(progress_response)
+
+
+def extract_values(text: str, repo_id: str) -> ProgressResponseSchema:
+    """
+    Extract the progress from tqdm message while downloading the pre-trained model
+    """
+    percent_pattern = r"(\d+)%"
+    curr_size_pattern = r"(\d+[a-zA-Z]+)"
+    total_size_pattern = r"/(\d+\s*[a-zA-Z]+)"
+    start_time_pattern = r"\d+:\d+"  # 04:58
+    end_time_pattern = r"<(\d+:\d+)"  # <01:45
+    speed_pattern = r"(\d+\w+/s)"  # 917kB/s
+
+    try:
+        # Extract values
+        curr_percent_matches = re.findall(percent_pattern, text)
+        curr_size_matches = re.search(curr_size_pattern, text)
+        total_size_matches = re.search(total_size_pattern, text)
+        start_time_match = re.search(start_time_pattern, text)
+        end_time_match = re.search(end_time_pattern, text)
+        speed_match = re.search(speed_pattern, text)
+
+        if curr_percent_matches:
+            curr_percent = int(curr_percent_matches[0])
+        else:
+            curr_percent = 0
+
+        if curr_size_matches:
+            curr_size = curr_size_matches.group(0)
+        else:
+            curr_size = "0M"
+
+        if total_size_matches:
+            total = total_size_matches.group(0)[1:]
+        else:
+            total = "0M"
+
+        if start_time_match:
+            start_time = start_time_match.group(0)
+        else:
+            start_time = "00:00"
+
+        if end_time_match:
+            end_time = end_time_match.group(1)
+        else:
+            end_time = "00:00"
+
+        if speed_match:
+            sec_per_dl = speed_match.group(1)
+        else:
+            sec_per_dl = "0.0MB/s"
+
+        model_instance = ProgressResponseSchema(
+            task="downloading",  # [downloading, training, None]
+            model_name=repo_id,
+            total=total,
+            curr_size=curr_size,
+            curr_percent=curr_percent,
+            start_time=start_time,
+            end_time=end_time,
+            sec_per_dl=sec_per_dl,
+        )
+
+        return model_instance
+
+    except AttributeError:
+        print(f"Failed to extract values from text: '{text}'")
+        return ProgressResponseSchema.no_progress()
+
+    except Exception as e:
+        print(f"Failed to extract values from text due to: {e}")
+        return ProgressResponseSchema.no_progress()
+
+
+# TODO
 def get_tokenizer(repo_id, path):
     tokenizer = AutoTokenizer.from_pretrained(repo_id)
     tokenizer.save_pretrained(save_directory=path)
-
-
-def get_response(url):
-    response = request_wrapper(
-        method="GET", url=url, stream=True, headers={}, timeout=10000.0, max_retries=1
-    )
-
-    return response
-
-
-def get_file_size(response: Response) -> str:
-    return response.headers.get("Content-Length")
-
-
-def get_displayed_name(content_disposition: Optional[str], url: str) -> str:
-    if content_disposition:
-        match = HEADER_FILENAME_PATTERN.search(content_disposition)
-        if match:
-            displayed_name = match.groupdict()["filename"]
-            return (
-                f"(…){displayed_name[-20:]}"
-                if len(displayed_name) > 22
-                else displayed_name
-            )
-    return url
-
-
-def http_get_file(
-    url: str,
-    temp_file: BinaryIO,
-    model_name: str,
-    response: Response,
-    expected_size: int,
-):
-    headers = {"Range": f"bytes={temp_file.tell()}-"}
-
-    displayed_name = get_displayed_name(
-        response.headers.get("Content-Disposition"), url
-    )
-
-    initialize_progress(model_name, expected_size)
-
-    progress = tqdm(
-        unit="B",
-        unit_scale=True,
-        total=expected_size,
-        desc=f"Downloading {displayed_name}",
-        disable=bool(logger.getEffectiveLevel() == logging.NOTSET),
-    )
-
-    for chunk in response.iter_content(chunk_size=10 * 1024 * 1024):
-        if chunk:
-            progress.update(len(chunk))
-            temp_file.write(chunk)
-            update_progress(model_name, len(chunk))
-
-    progress.close()
-    reset_progress(model_name)
-
-
-def request_wrapper(
-    method: HTTP_METHOD_T,
-    url: str,
-    *,
-    max_retries: int = 0,
-    base_wait_time: float = 0.5,
-    max_wait_time: float = 2,
-    timeout: Optional[float] = 10.0,
-    follow_relative_redirects: bool = False,
-    **params,
-) -> requests.Response:
-    if follow_relative_redirects:
-        response = request_wrapper(
-            method=method,
-            url=url,
-            max_retries=max_retries,
-            base_wait_time=base_wait_time,
-            max_wait_time=max_wait_time,
-            timeout=timeout,
-            follow_relative_redirects=False,
-            **params,
-        )
-
-        # If redirection, we redirect only relative paths.
-        # This is useful in case of a renamed repository.
-        if 300 <= response.status_code <= 399:
-            parsed_target = urlparse(response.headers["Location"])
-            if parsed_target.netloc == "":
-                # This means it is a relative 'location' headers, as allowed by RFC 7231.
-                # (e.g. '/path/to/resource' instead of 'http://domain.tld/path/to/resource')
-                # We want to follow this relative redirect !
-                #
-                # Highly inspired by `resolve_redirects` from requests library.
-                # See https://github.com/psf/requests/blob/main/requests/sessions.py#L159
-                return request_wrapper(
-                    method=method,
-                    url=urlparse(url)._replace(path=parsed_target.path).geturl(),
-                    max_retries=max_retries,
-                    base_wait_time=base_wait_time,
-                    max_wait_time=max_wait_time,
-                    timeout=timeout,
-                    follow_relative_redirects=True,  # resolve recursively
-                    **params,
-                )
-        return response
-
-    return http_backoff(
-        method=method,
-        url=url,
-        max_retries=max_retries,
-        base_wait_time=base_wait_time,
-        max_wait_time=max_wait_time,
-        retry_on_exceptions=(Timeout, ProxyError),
-        retry_on_status_codes=(),
-        timeout=timeout,
-        **params,
-    )

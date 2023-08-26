@@ -17,7 +17,6 @@ from core.fastapi.middlewares import (
     SQLAlchemyMiddleware,
     ResponseLogMiddleware,
 )
-from core.helpers.cache import Cache, RedisBackend, CustomKeyMaker
 
 
 # ADD ROUTER HERE:
@@ -70,10 +69,6 @@ def make_middleware() -> List[Middleware]:
     return middleware
 
 
-def init_cache() -> None:
-    Cache.init(backend=RedisBackend(), key_maker=CustomKeyMaker())
-
-
 def create_app() -> FastAPI:
     app_ = FastAPI(
         title="Hide",
@@ -86,7 +81,6 @@ def create_app() -> FastAPI:
     )
     init_routers(app_=app_)
     init_listeners(app_=app_)
-    init_cache()
     return app_
 
 

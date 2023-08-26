@@ -1,16 +1,13 @@
-# Global variable to save progress for multiple models
-PROGRESS = {}
+from app.training.schemas.training import ProgressResponseSchema
+from core.helpers.cache import Cache
 
 
-def reset_progress(model_name: str):
-    if model_name in PROGRESS:
-        del PROGRESS[model_name]
+def reset_progress(total: str, model_name: str):
+    Cache.delete_startswith(f"{model_name}_{total}")
 
 
-def initialize_progress(model_name: str, total: int):
-    PROGRESS[model_name] = {"current": 0, "total": total}
-
-
-def update_progress(model_name: str, chunk_length: int):
-    if model_name in PROGRESS:
-        PROGRESS[model_name]["current"] += chunk_length
+def update_progress(progress_data: ProgressResponseSchema):
+    Cache.set(
+        f"{progress_data.model_name}_{progress_data.total}",
+        progress_data.model_dump_json(),
+    )

@@ -11,6 +11,7 @@ class FinetuningModel(Base):
     )
     pm_no = Column(Integer, ForeignKey("pretrained_model.pm_no"), nullable=False)
     user_no = Column(Integer, ForeignKey("users.user_no"), nullable=False)
+    fm_model_name = Column(String(50), nullable=False, comment="파인튜닝 모델의 이름")
     fm_description = Column(
         String(255), comment="해당 파인튜닝 모델에 대한 설명(*디자인에 반영안됨, 우선순위 낮음)"
     )
