@@ -43,7 +43,7 @@ async def start_training(
 ):
     """Initiates a background model training task."""
     task_key = f"{TASK_PREFIX}{TRAINING}"
-    background_tasks.add_task(Cache.set, task_key, training_param.base_model_name)
+    background_tasks.add_task(Cache.set, task_key, training_param.pm_name)
     background_tasks.add_task(train_model, training_param)
     background_tasks.add_task(Cache.delete_startswith, task_key)
     background_tasks.add_task(

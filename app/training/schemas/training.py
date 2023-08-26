@@ -30,8 +30,8 @@ class ProgressResponseSchema(BaseModel):
 class FinetuningRequestSchema(BaseModel):
     model_config = ConfigDict(protected_namespaces=("model_", "elapsed_", "e"))
     pm_no: int = 1
+    pm_name: str = "gpt2"
     fm_name: str = "gpt2_chat"
-    base_model_name: str = "gpt2"
     epochs: int = 3
     save_strategy: str = "steps"
     logging_strategy: str = "steps"
