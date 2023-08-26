@@ -24,8 +24,8 @@ from core.fastapi.middlewares import (
 def init_routers(app_: FastAPI) -> None:
     app_.include_router(home_router)
     app_.include_router(router)
-    app_.include_router(training_router, prefix="/api/training")
-    app_.include_router(history_router, prefix="/api/history")
+    app_.include_router(training_router, prefix="/api/training", tags=["Training"])
+    app_.include_router(history_router, prefix="/api/history", tags=["History"])
 
 
 def init_listeners(app_: FastAPI) -> None:
