@@ -19,4 +19,4 @@ RUN poetry install --no-dev
 COPY . /home
 
 RUN chmod +x /home/docker/api/startup.sh
-ENTRYPOINT ["/home/docker/api/startup.sh"]
+ENTRYPOINT /home/docker/api/startup.sh
