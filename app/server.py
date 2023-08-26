@@ -71,8 +71,8 @@ def make_middleware() -> List[Middleware]:
 
 def create_app() -> FastAPI:
     app_ = FastAPI(
-        title="Hide",
-        description="Hide API",
+        title="Project ELMO",
+        description="ELMO API",
         version="1.0.0",
         docs_url=None if config.ENV == "production" else "/docs",
         redoc_url=None if config.ENV == "production" else "/redoc",
