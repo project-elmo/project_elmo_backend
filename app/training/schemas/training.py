@@ -6,7 +6,7 @@ class PretrainedModelResponseSchema(BaseModel):
     pm_no: int
     name: str
     description: str
-    ft_model_name: str
+    version: str
     base_model: str
 
 
