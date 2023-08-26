@@ -1,47 +1,77 @@
-from functools import wraps
-from typing import Type
+from core.config import config
 
-from .base import BaseBackend, BaseKeyMaker
-from .cache_tag import CacheTag
-
-
-class CacheManager:
-    def __init__(self):
-        self.backend = None
-        self.key_maker = None
-
-    def init(self, backend: Type[BaseBackend], key_maker: Type[BaseKeyMaker]) -> None:
-        self.backend = backend
-        self.key_maker = key_maker
-
-    def cached(self, prefix: str = None, tag: CacheTag = None, ttl: int = 60):
-        def _cached(function):
-            @wraps(function)
-            async def __cached(*args, **kwargs):
-                if not self.backend or not self.key_maker:
-                    raise Exception("backend or key_maker is None")
-
-                key = await self.key_maker.make(
-                    function=function,
-                    prefix=prefix if prefix else tag.value,
-                )
-                cached_response = await self.backend.get(key=key)
-                if cached_response:
-                    return cached_response
-
-                response = await function(*args, **kwargs)
-                await self.backend.set(response=response, key=key, ttl=ttl)
-                return response
-
-            return __cached
-
-        return _cached
-
-    async def remove_by_tag(self, tag: CacheTag) -> None:
-        await self.backend.delete_startswith(value=tag.value)
-
-    async def remove_by_prefix(self, prefix: str) -> None:
-        await self.backend.delete_startswith(value=prefix)
+import json
+import redis
 
 
-Cache = CacheManager()
+class RedisHelper:
+    def __init__(self, host=config.REDIS_HOST, port=6379, db=0):
+        self.redis = redis.Redis(host=host, port=port, db=db)
+
+    def set(self, key, value):
+        if isinstance(value, dict):
+            v = json.dumps(value, ensure_ascii=False).encode("utf-8")
+            self.redis.set(key, v)
+        else:
+            self.redis.set(key, value)
+
+    def get(self, key):
+        value = self.redis.get(key)
+        if value:
+            try:
+                return json.loads(value.decode("utf-8"))
+            except json.JSONDecodeError as e:
+                print(f"Error parsing JSON data: {e}")
+                return value.decode("utf-8")
+        return None
+
+    def get_startswith(self, prefix: str):
+        for key in self.redis.keys(f"{prefix}*"):
+            return self.get(key)
+        return None
+
+    def get_endwith(self, suffix: str):
+        for key in self.redis.keys("*"):
+            if key.decode("utf-8").endswith(suffix):
+                return self.get(key)
+        return None
+
+    def get_include(self, substring: str):
+        for key in self.redis.keys("*"):
+            if substring in key.decode("utf-8"):
+                return self.get(key)
+        return None
+
+    def get_all(self):
+        cache = {}
+        for key in self.redis.scan_iter():
+            cache[key.decode("utf-8")] = self.get(key)
+        return cache
+
+    def delete(self, key):
+        self.redis.delete(key)
+
+    def delete_startswith(self, value: str) -> None:
+        for key in self.redis.scan_iter(f"{value}*"):
+            self.redis.delete(key)
+
+    def exists(self, key):
+        return self.redis.exists(key)
+
+    def keys(self, pattern="*"):
+        return self.redis.keys(pattern)
+
+    def values(self):
+        return self.redis.values()
+
+    def scan(self, cursor=0):
+        return self.redis.scan(cursor)
+
+    def expireat(self, key, timestamp):
+        self.redis.expireat(key, timestamp)
+
+    def ttl(self, key):
+        return self.redis.ttl(key)
+
+
+Cache = RedisHelper()
