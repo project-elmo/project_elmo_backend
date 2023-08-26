@@ -29,8 +29,8 @@ class ProgressResponseSchema(BaseModel):
 
 class TrainingParameterRequestSchema(BaseModel):
     model_config = ConfigDict(protected_namespaces=("model_", "elapsed_", "e"))
-
     model_name: str
+    base_model_name: str
     epochs: int = 3
     save_strategy: str = "steps"
     logging_strategy: str = "steps"

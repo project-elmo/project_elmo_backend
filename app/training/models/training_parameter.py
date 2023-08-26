@@ -33,7 +33,9 @@ class TrainingParameter(Base):
     batch_size = Column(Integer, nullable=False)
     eval_steps = Column(Integer, nullable=False)
     save_steps = Column(Integer, nullable=False)
-    save_total_limits = Column(Integer)  # 'unlimited' is represented as -1
+    save_total_limits = Column(
+        Integer, nullable=False
+    )  # 'unlimited' is represented as -1
     run_on_gpu = Column(Boolean, nullable=False)
     load_best_at_the_end = Column(Boolean, nullable=False)
     dataset = Column(String(255), nullable=False, comment="훈련에 쓰인 dataset file path")
