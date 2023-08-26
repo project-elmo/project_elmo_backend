@@ -43,18 +43,27 @@ async def start_training(
 ):
     """Initiates a background model training task."""
     task_key = f"{TASK_PREFIX}{TRAINING}"
-    background_tasks.add_task(Cache.set, task_key, training_param.pm_name)
-    background_tasks.add_task(train_model, training_param)
-    background_tasks.add_task(Cache.delete_startswith, task_key)
-    background_tasks.add_task(
-        TrainingService().create_finetuning_model(
-            training_param=training_param,
-            fm_name=training_param.fm_name,
-            pm_no=training_param.pm_no,
-            start_time=datetime.now(),
-            end_time=datetime.now(),
-            ts_model_name=f"{training_param.fm_name}_{training_param.epochs}",
-        )
+    # background_tasks.add_task(Cache.set, task_key, training_param.pm_name)
+    # background_tasks.add_task(train_model, training_param)
+    # background_tasks.add_task(Cache.delete_startswith, task_key)
+    # background_tasks.add_task(
+    #     TrainingService().create_finetuning_model(
+    #         training_param=training_param,
+    #         fm_name=training_param.fm_name,
+    #         pm_no=training_param.pm_no,
+    #         start_time=datetime.now(),
+    #         end_time=datetime.now(),
+    #         ts_model_name=f"{training_param.fm_name}_{training_param.epochs}",
+    #     )
+    # )
+
+    TrainingService().create_finetuning_model(
+        training_param=training_param,
+        fm_name=training_param.fm_name,
+        pm_no=training_param.pm_no,
+        start_time=datetime.now(),
+        end_time=datetime.now(),
+        ts_model_name=f"{training_param.fm_name}_{training_param.epochs}",
     )
 
     return Response(status_code=200, content="Training started in the background")
