@@ -9,15 +9,14 @@ class TrainingSession(Base):
     session_no = Column(
         Integer, primary_key=True, autoincrement=True, comment="AUTO_INCREMENT"
     )
-    fm_no = Column(
-        Integer,
-        ForeignKey("finetuning_model.fm_no"),
-        primary_key=True,
-        comment="AUTO_INCREMENT",
-    )
+    fm_no = Column(Integer, ForeignKey("finetuning_model.fm_no"), nullable=False)
     parent_session_no = Column(Integer, nullable=False, comment="부모 모델의 세션번호")
-    start_time = Column(DateTime, default=func.now(), nullable=False)
-    end_time = Column(DateTime, default=func.now(), nullable=False)
+    start_time = Column(
+        DateTime, default=func.now(), nullable=False, comment="YYYY-MM-DD HH:MM:SS"
+    )
+    end_time = Column(
+        DateTime, default=func.now(), nullable=False, comment="YYYY-MM-DD HH:MM:SS"
+    )
     ts_model_name = Column(
         String(50), nullable=False, comment="해당 세션으로 파인튜닝된 모델의 이름-epoch, loss율로 표시"
     )

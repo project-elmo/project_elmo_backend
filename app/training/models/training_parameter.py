@@ -17,12 +17,7 @@ class TrainingParameter(Base):
     session_no = Column(
         Integer, ForeignKey("training_session.session_no"), nullable=False
     )
-    fm_no = Column(
-        Integer,
-        ForeignKey("finetuning_model.fm_no"),
-        primary_key=True,
-        comment="AUTO_INCREMENT",
-    )
+    fm_no = Column(Integer, ForeignKey("finetuning_model.fm_no"), nullable=False)
     model_name = Column(String(255), nullable=False)
     epochs = Column(Integer, nullable=False)
     save_strategy = Column(String(50), nullable=False)
