@@ -6,9 +6,11 @@ from fastapi import (
     APIRouter,
     BackgroundTasks,
     Depends,
+    HTTPException,
     WebSocket,
     Response,
     WebSocketDisconnect,
+    logger,
 )
 from fastapi.websockets import WebSocketState
 from app.training.llm.model_trainer import train_model
@@ -55,6 +57,9 @@ async def start_training(training_param: FinetuningRequestSchema):
         Cache.set(task_key, training_param.pm_name)
         train_model(training_param)
         Cache.delete_startswith, task_key
+    else:
+        logger("Wrong file path")
+        raise HTTPException(status_code=404, detail="File not found")
 
     return Response(status_code=200, content="Training started in the background")
 
