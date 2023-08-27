@@ -26,13 +26,20 @@ def copy_file(source_path, destination_dir):
         print(f"Source file {source_path} does not exist")
         return False
 
-    shutil.copy2(source_path, destination_dir)
+    # Create the destination directory if it doesn't exist
+    if not os.path.exists(destination_dir):
+        os.makedirs(destination_dir)
 
-    if os.path.exists(destination_dir):
-        print(f"File successfully copied to {destination_dir}")
+    # Build the full destination path, including the filename
+    destination_path = os.path.join(destination_dir, os.path.basename(source_path))
+
+    shutil.copy2(source_path, destination_path)
+
+    if os.path.exists(destination_path):
+        print(f"File successfully copied to {destination_path}")
         return True
     else:
-        print(f"Failed to copy the file to {destination_dir}")
+        print(f"Failed to copy the file to {destination_path}")
         return False
 
 
