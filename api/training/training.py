@@ -26,13 +26,11 @@ SOCKET_CLOSE = "socket_close"
 @training_router.get(
     "/hub_download/", dependencies=[Depends(PermissionDependency([AllowAll]))]
 )
-async def start_hub_download(
-    background_tasks: BackgroundTasks, model_name: str, namespace: Optional[str] = None
-):
+async def start_hub_download(background_tasks: BackgroundTasks, model_name: str):
     """Initiates a background download task."""
     task_key = f"{TASK_PREFIX}{DOWNLOADING}"
     background_tasks.add_task(Cache.set, task_key, model_name)
-    background_tasks.add_task(hub_download, model_name, namespace)
+    background_tasks.add_task(hub_download, model_name)
     background_tasks.add_task(Cache.delete_startswith, task_key)
 
     return Response(status_code=200, content="Download in progress!")

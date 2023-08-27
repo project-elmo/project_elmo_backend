@@ -11,12 +11,11 @@ from app.training.schemas.training import ProgressResponseSchema
 from core.config import config
 
 
-def hub_download(model_name: str, namespace: str = None):
+def hub_download(model_name: str):
     models_dir = config.MODELS_DIR
     path = os.path.join(models_dir, model_name)
-    repo_id = f"{namespace}/{model_name}" if namespace else model_name
 
-    execute_download(repo_id, path)
+    execute_download(model_name, path)
 
 
 def execute_download(repo_id, path):
