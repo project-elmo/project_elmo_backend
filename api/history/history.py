@@ -63,7 +63,8 @@ async def list_training_sessions_by_fm(fm_no: int):
     # Convert the integer fields to strings
     for session in sessions:
         session.session_no = str(session.session_no)
-        session.parent_session_no = str(session.parent_session_no)
+        if session.parent_session_no == 0:
+            session.parent_session_no = ""
 
     return sessions
 

@@ -1,6 +1,7 @@
 from typing import List
 from sqlalchemy import select
 from app.training.models.pretrained_model import PretrainedModel
+from app.training.schemas.training import FinetuningRequestSchema
 
 from core.db import session
 from app.training.models import FinetuningModel, TrainingSession, TrainingParameter
@@ -9,20 +10,18 @@ from app.training.models import FinetuningModel, TrainingSession, TrainingParame
 class TrainingService:
     async def create_finetuning_model(
         self,
-        training_param: TrainingParameter,
-        fm_name: str,
-        pm_no: int,
-        start_time: str,  # YYYY-MM-DD HH:MM:SS
-        end_time: str,  # YYYY-MM-DD HH:MM:SS
+        training_param: FinetuningRequestSchema,
+        start_time: str,  # 2023-08-26T21:04:31
+        end_time: str,  # 2023-08-26T21:04:31
         ts_model_name: str,
         user_no: int = 1,  # TODO: fix,
-        parent_session_no: int = 1,
+        parent_session_no: int = 0,  # This will convert into "". The value of the root node for sessions should be an empty string.
     ) -> None:
         # Create the fine-tuned model
         ft_model = FinetuningModel(
             user_no=user_no,
-            pm_no=pm_no,
-            fm_name=fm_name,
+            pm_no=training_param.pm_no,
+            fm_name=training_param.fm_name,
         )
 
         # Create the training session

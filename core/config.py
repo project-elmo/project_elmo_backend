@@ -19,8 +19,10 @@ class Config(BaseSettings):
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     DL_DIR: str = os.path.join(os.environ["HOME"], "elmo")
+    RESULT_DIR: str = os.path.join(DL_DIR, "result")
     DATA_DIR: str = os.path.join(DL_DIR, "data")
     MODELS_DIR: str = os.path.join(DATA_DIR, "models")
+    DATASET_DIR: str = os.path.join(DATA_DIR, "datasets")
 
 
 class DevelopmentConfig(Config):
