@@ -40,6 +40,7 @@ def is_valid_file_path(path_str):
     """
     Check if the given string is a valid file path and exists in the filesystem.
     """
+    print("is_valid_file_path", path_str)
     return os.path.isfile(path_str)
 
 
