@@ -10,9 +10,9 @@ from fastapi import (
     WebSocket,
     Response,
     WebSocketDisconnect,
-    logger,
 )
 from fastapi.websockets import WebSocketState
+from loguru import logger
 from app.training.llm.model_trainer import train_model
 from app.training.download import hub_download
 from app.training.schemas.training import *
@@ -47,20 +47,22 @@ async def start_hub_download(background_tasks: BackgroundTasks, model_name: str)
 async def start_training(training_param: FinetuningRequestSchema):
     """Initiates a background model training task."""
     task_key = f"{TASK_PREFIX}{TRAINING}"
-    is_file = is_valid_file_path(training_param.dataset)
-    is_copy_file = copy_file(training_param.dataset, config.DATASET_DIR)
 
-    logger(f"{training_param.dataset} is_file: {is_file}, is_copy_file: {is_copy_file}")
+    file_path = training_param.dataset
+    is_file = is_valid_file_path(file_path)
+    is_copy_file = copy_file(file_path, config.DATASET_DIR)
+
+    logger.debug(f"{file_path} is_file: {is_file}, is_copy_file: {is_copy_file}")
 
     if is_file and is_copy_file:
-        filename = get_filename_from_path(training_param.dataset)
+        filename = get_filename_from_path(file_path)
         training_param.dataset = os.path.join(config.DATA_DIR, filename)
 
         Cache.set(task_key, training_param.pm_name)
         train_model(training_param)
         Cache.delete_startswith, task_key
     else:
-        logger("Wrong file path")
+        logger.debug("Wrong file path")
         raise HTTPException(status_code=404, detail="File not found")
 
     return Response(status_code=200, content="Training started in the background")
