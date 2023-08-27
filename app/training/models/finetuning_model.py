@@ -16,7 +16,7 @@ class FinetuningModel(Base):
         String(255), comment="해당 파인튜닝 모델에 대한 설명(*디자인에 반영안됨, 우선순위 낮음)"
     )
     task = Column(
-        Integer, nullable=False, comment="모델의 목적:: 1 QA 2 Classification 3 Generate"
+        Integer, nullable=False, comment="모델의 목적:: 0 QA 1 Classification 2 Generate"
     )
 
     training_sessions = relationship(

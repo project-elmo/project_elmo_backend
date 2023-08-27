@@ -49,6 +49,7 @@ async def train_model(training_param: FinetuningRequestSchema):
         per_device_train_batch_size=training_param.batch_size,
         evaluation_strategy=training_param.evaluation_strategy,
         learning_rate=training_param.learning_rate,
+        weight_decay=training_param.weight_decay,
         save_total_limit=training_param.save_total_limits,
         logging_strategy=training_param.logging_strategy,
         logging_steps=training_param.save_steps,
