@@ -47,10 +47,12 @@ async def start_hub_download(background_tasks: BackgroundTasks, model_name: str)
 async def start_training(training_param: FinetuningRequestSchema):
     """Initiates a background model training task."""
     task_key = f"{TASK_PREFIX}{TRAINING}"
+    is_file = is_valid_file_path(training_param.dataset)
+    is_copy_file = copy_file(training_param.dataset, config.DATASET_DIR)
 
-    if is_valid_file_path(training_param.dataset) and copy_file(
-        training_param.dataset, config.DATASET_DIR
-    ):
+    logger(f"{training_param.dataset} is_file: {is_file}, is_copy_file: {is_copy_file}")
+
+    if is_file and is_copy_file:
         filename = get_filename_from_path(training_param.dataset)
         training_param.dataset = os.path.join(config.DATA_DIR, filename)
 
