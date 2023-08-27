@@ -32,6 +32,9 @@ async def start_hub_download(background_tasks: BackgroundTasks, model_name: str)
     """Initiates a background download task."""
     task_key = f"{TASK_PREFIX}{DOWNLOADING}"
     background_tasks.add_task(Cache.set, task_key, model_name)
+
+    print("log_cache::", Cache.get_all())
+
     background_tasks.add_task(hub_download, model_name)
     background_tasks.add_task(Cache.delete_startswith, task_key)
 
