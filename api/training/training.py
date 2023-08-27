@@ -20,6 +20,7 @@ training_router = APIRouter()
 TASK_PREFIX = "task_"
 TRAINING = "training"
 DOWNLOADING = "downloading"
+SOCKET_CLOSE = "socket_close"
 
 
 @training_router.get(
@@ -80,6 +81,11 @@ async def websocket_endpoint(ws: WebSocket):
     try:
         tasks = [DOWNLOADING, TRAINING]
         while True:
+            data = await ws.receive_text()
+            if data == SOCKET_CLOSE:
+                break
+
+            # Otherwise, send updates if there are any
             for task in tasks:
                 task_key = f"{TASK_PREFIX}{task}"
                 model_name = Cache.get(str(task_key))
@@ -92,10 +98,6 @@ async def websocket_endpoint(ws: WebSocket):
                     )
                     print("progress_data: ", progress_data)
                     await ws.send_json(progress_data)
-
-            # Close the connection if no tasks are active
-            if not any([Cache.get(f"{TASK_PREFIX}{task}") for task in tasks]):
-                break
 
             await asyncio.sleep(1)  # send updates every second
 
