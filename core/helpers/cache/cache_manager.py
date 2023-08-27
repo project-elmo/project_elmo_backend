@@ -21,7 +21,7 @@ class RedisHelper:
             try:
                 return json.loads(value.decode("utf-8"))
             except json.JSONDecodeError as e:
-                print(f"Error parsing JSON data: {e}")
+                # print(f"Error parsing JSON data: {e}")
                 return value.decode("utf-8")
         return None
 

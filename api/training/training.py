@@ -32,9 +32,6 @@ async def start_hub_download(background_tasks: BackgroundTasks, model_name: str)
     """Initiates a background download task."""
     task_key = f"{TASK_PREFIX}{DOWNLOADING}"
     background_tasks.add_task(Cache.set, task_key, model_name)
-
-    print("log_cache::", Cache.get_all())
-
     background_tasks.add_task(hub_download, model_name)
     background_tasks.add_task(Cache.delete_startswith, task_key)
 
@@ -76,18 +73,15 @@ async def start_training(
 @training_router.websocket("/ws/progress/")
 async def websocket_endpoint(ws: WebSocket):
     await ws.accept()
+    print("websocket_log_cache::", Cache.get_all())
 
     try:
         tasks = [DOWNLOADING, TRAINING]
         while True:
-            data = await ws.receive_text()
-            if data == SOCKET_CLOSE:
-                break
-            print("log_cache::", Cache.get_all())
-
             for task in tasks:
                 task_key = f"{TASK_PREFIX}{task}"
-                model_name = Cache.get(str(task_key))
+
+                model_name = Cache.get(task_key)
 
                 if model_name:
                     progress_data: ProgressResponseSchema = Cache.get_startswith(
@@ -95,7 +89,7 @@ async def websocket_endpoint(ws: WebSocket):
                     )
                     await ws.send_json(progress_data)
 
-            await asyncio.sleep(0.1)  # send updates every second
+            await asyncio.sleep(1)  # send updates every second
 
     except WebSocketDisconnect:
         # client diconnected
