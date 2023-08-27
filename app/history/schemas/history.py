@@ -20,9 +20,9 @@ class FinetuningModelResponseSchema(BaseModel):
 
 
 class TrainingSessionResponseSchema(BaseModel):
-    session_no: int = 3
+    session_no: str = "3"
     fm_no: int
-    parent_session_no: int
+    parent_session_no: str
     start_time: datetime
     end_time: datetime
     ts_model_name: str

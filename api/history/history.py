@@ -40,6 +40,12 @@ async def list_all_finetuned_models():
 async def list_training_sessions_by_fm(fm_no: int):
     """Retrieve a list of training sessions by their fm_no."""
     sessions = await TrainingService().get_training_sessions_by_fm(fm_no=fm_no)
+
+    # Convert the integer fields to strings
+    for session in sessions:
+        session.session_no = str(session.session_no)
+        session.parent_session_no = str(session.parent_session_no)
+
     return sessions
 
 

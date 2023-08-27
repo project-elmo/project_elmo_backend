@@ -85,7 +85,6 @@ async def websocket_endpoint(ws: WebSocket):
             if data == SOCKET_CLOSE:
                 break
 
-            # Otherwise, send updates if there are any
             for task in tasks:
                 task_key = f"{TASK_PREFIX}{task}"
                 model_name = Cache.get(str(task_key))
