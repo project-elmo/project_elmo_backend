@@ -80,6 +80,7 @@ async def websocket_endpoint(ws: WebSocket):
             data = await ws.receive_text()
             if data == SOCKET_CLOSE:
                 break
+            print("log_cache::", Cache.get_all())
 
             for task in tasks:
                 task_key = f"{TASK_PREFIX}{task}"
@@ -91,7 +92,7 @@ async def websocket_endpoint(ws: WebSocket):
                     )
                     await ws.send_json(progress_data)
 
-            await asyncio.sleep(1)  # send updates every second
+            await asyncio.sleep(0.1)  # send updates every second
 
     except WebSocketDisconnect:
         # client diconnected
