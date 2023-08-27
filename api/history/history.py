@@ -21,21 +21,20 @@ history_router = APIRouter()
 async def list_all_pretrained_models():
     """Retrieve a list of all pre-trained models."""
     models_db = await TrainingService().get_all_pretrained_models()
-    # Set is_downloaded
     models_dir = config.MODELS_DIR
 
     # Convert ORM objects to Pydantic objects and set is_downloaded
     schema_models = []
     for db_model in models_db:
+        is_downloaded = get_is_downloaded(models_dir, db_model.name)
         model_data = PretrainedModelResponseSchema(
             pm_no=db_model.pm_no,
             name=db_model.name,
             description=db_model.description,
             version=db_model.version,
             base_model=db_model.base_model,
+            is_downloaded=is_downloaded,
         )
-        model_data.is_downloaded = get_is_downloaded(models_dir, db_model.name)
-
         schema_models.append(model_data)
 
     return schema_models
