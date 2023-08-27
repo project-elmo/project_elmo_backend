@@ -5,27 +5,19 @@ import logging
 
 from fastapi.responses import JSONResponse
 from transformers import (
-    GPT2Tokenizer,
-    GPT2LMHeadModel,
-    BertTokenizer,
-    BertLMHeadModel,
-    RobertaTokenizer,
-    RobertaForCausalLM,
-    AlbertTokenizer,
-    AlbertModel,
-    ElectraTokenizer,
-    ElectraForCausalLM,
     AutoTokenizer,
-    LlamaModel,
     AutoModel,
     Trainer,
     TrainingArguments,
+    PreTrainedTokenizer,
 )
+from datasets import load_dataset
 
 from app.training.schemas.training import FinetuningRequestSchema
 from app.training.services.training import TrainingService
 from core.helpers.cache import Cache
 from core.config import config
+from core.utils.file_util import *
 
 
 async def train_model(training_param: FinetuningRequestSchema):
@@ -36,36 +28,19 @@ async def train_model(training_param: FinetuningRequestSchema):
     model_name = training_param.pm_name
     path = config.MODELS_DIR
 
-    if "gpt2" in model_name:
-        tokenizer = GPT2Tokenizer.from_pretrained(model_name)
-        model = GPT2LMHeadModel.from_pretrained(
-            model_name, local_files_only=True, cache_dir=path
-        )
-    elif "bert" in model_name:
-        tokenizer = BertTokenizer.from_pretrained(model_name)
-        model = BertLMHeadModel.from_pretrained(
-            model_name, local_files_only=True, cache_dir=path
-        )
-    elif "roberta" in model_name:
-        tokenizer = RobertaTokenizer.from_pretrained(model_name)
-        model = RobertaForCausalLM.from_pretrained(
-            model_name, local_files_only=True, cache_dir=path
-        )
-    elif "albert" in model_name:
-        tokenizer = AlbertTokenizer.from_pretrained(model_name)
-        model = AlbertModel.from_pretrained(
-            model_name, local_files_only=True, cache_dir=path
-        )
-    elif "electra" in model_name:
-        tokenizer = ElectraTokenizer.from_pretrained(model_name)
-        model = ElectraForCausalLM.from_pretrained(
-            model_name, local_files_only=True, cache_dir=path
-        )
-    else:
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModel.from_pretrained(
-            model_name, local_files_only=True, cache_dir=path
-        )
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModel.from_pretrained(model_name, local_files_only=True, cache_dir=path)
+
+    # Load the dataset
+    dataset_path = training_param.dataset
+    loaders = {"json": "json", "csv": "csv"}
+
+    extension = get_extension_from_path(dataset_path)
+    dataset = load_dataset(
+        loaders.get(extension, "default_value"), data_files=dataset_path
+    )
+
+    tokenized_datasets = dataset.map(tokenize_qa(dataset, tokenizer), batched=True)
 
     # Set up the training arguments
     training_args = TrainingArguments(
@@ -76,7 +51,7 @@ async def train_model(training_param: FinetuningRequestSchema):
         learning_rate=training_param.learning_rate,
         save_total_limit=training_param.save_total_limits,
         logging_strategy=training_param.logging_strategy,
-        logging_steps=training_param.save_steps,  # Assuming this is the correct mapping
+        logging_steps=training_param.save_steps,
         eval_steps=training_param.eval_steps,
         save_strategy=training_param.save_strategy,
         disable_tqdm=False,
@@ -89,7 +64,7 @@ async def train_model(training_param: FinetuningRequestSchema):
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=tokenizer(training_param.dataset),
+        train_dataset=tokenized_datasets["train"],
     )
 
     start_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
@@ -107,4 +82,14 @@ async def train_model(training_param: FinetuningRequestSchema):
         start_time=start_time,
         end_time=end_time,
         ts_model_name=ts_model_name,
+    )
+
+
+def tokenize_qa(data, tokenizer: PreTrainedTokenizer):
+    return tokenizer(
+        data["question"],
+        data["answer"],
+        truncation=True,
+        padding="max_length",
+        max_length=512,
     )

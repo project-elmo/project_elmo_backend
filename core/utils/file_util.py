@@ -50,6 +50,13 @@ def get_filename_from_path(path):
     return os.path.basename(path)
 
 
+def get_extension_from_path(path):
+    """
+    Extract the file extension from a given path without the dot.
+    """
+    return os.path.splitext(path)[1][1:]
+
+
 def is_supported_extension(filename):
     """
     Check if the filename has a supported extension.

@@ -45,3 +45,4 @@ class FinetuningRequestSchema(BaseModel):
     run_on_gpu: bool = True
     load_best_at_the_end: bool = False
     dataset: str = ""
+    task: int = 0
