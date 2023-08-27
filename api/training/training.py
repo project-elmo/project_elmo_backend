@@ -7,7 +7,9 @@ from fastapi import (
     Depends,
     WebSocket,
     Response,
+    WebSocketDisconnect,
 )
+from fastapi.websockets import WebSocketState
 from app.training.llm.model_trainer import train_model
 from app.training.download import hub_download
 from app.training.schemas.training import *
@@ -70,10 +72,6 @@ async def start_training(
 
 @training_router.websocket("/ws/progress/")
 async def websocket_endpoint(ws: WebSocket):
-    """
-    Sends ProgressResponseSchema via socket to provide real-time training and download
-    progress to the client.
-    """
     await ws.accept()
 
     try:
@@ -86,17 +84,18 @@ async def websocket_endpoint(ws: WebSocket):
             for task in tasks:
                 task_key = f"{TASK_PREFIX}{task}"
                 model_name = Cache.get(str(task_key))
-                print("model_name", model_name)
-                print(Cache.get_all())
 
                 if model_name:
                     progress_data: ProgressResponseSchema = Cache.get_startswith(
                         model_name
                     )
-                    print("progress_data: ", progress_data)
                     await ws.send_json(progress_data)
 
             await asyncio.sleep(1)  # send updates every second
 
+    except WebSocketDisconnect:
+        # client diconnected
+        pass
     finally:
-        await ws.close()
+        if ws.client_state != WebSocketState.DISCONNECTED:
+            await ws.close()
