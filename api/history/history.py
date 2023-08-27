@@ -3,9 +3,12 @@ from fastapi import (
     APIRouter,
     HTTPException,
 )
+from core.config import config
+from core.utils.file_util import get_is_downloaded
+
 from app.history.schemas.history import *
-from app.training.services.training import TrainingService
 from app.user.schemas import ExceptionResponseSchema
+from app.training.services.training import TrainingService
 
 history_router = APIRouter()
 
@@ -17,8 +20,25 @@ history_router = APIRouter()
 )
 async def list_all_pretrained_models():
     """Retrieve a list of all pre-trained models."""
-    models = await TrainingService().get_all_pretrained_models()
-    return models
+    models_db = await TrainingService().get_all_pretrained_models()
+    # Set is_downloaded
+    models_dir = config.MODELS_DIR
+
+    # Convert ORM objects to Pydantic objects and set is_downloaded
+    schema_models = []
+    for db_model in models_db:
+        model_data = PretrainedModelResponseSchema(
+            pm_no=db_model.pm_no,
+            name=db_model.name,
+            description=db_model.description,
+            version=db_model.version,
+            base_model=db_model.base_model,
+        )
+        model_data.is_downloaded = get_is_downloaded(models_dir, db_model.name)
+
+        schema_models.append(model_data)
+
+    return schema_models
 
 
 @history_router.get(

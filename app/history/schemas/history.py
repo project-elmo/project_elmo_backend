@@ -9,6 +9,7 @@ class PretrainedModelResponseSchema(BaseModel):
     description: str
     version: str
     base_model: str
+    is_downloaded: bool
 
 
 class FinetuningModelResponseSchema(BaseModel):
