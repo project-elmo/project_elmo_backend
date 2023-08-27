@@ -20,7 +20,7 @@ from core.config import config
 from core.utils.file_util import *
 
 
-async def train_model(training_param: FinetuningRequestSchema):
+def train_model(training_param: FinetuningRequestSchema):
     # Check if CUDA is available
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
