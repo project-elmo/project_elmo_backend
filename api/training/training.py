@@ -115,7 +115,6 @@ async def get_datasets():
 
     # Check if the datasets directory exists
     if not os.path.isdir(datasets_path):
-        logger.debug(f"datasets_path: {datasets_path}")
         raise HTTPException(status_code=404, detail="Datasets directory not found")
 
     datasets = []
