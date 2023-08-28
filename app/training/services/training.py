@@ -34,12 +34,24 @@ class TrainingService:
 
         training_session.finetuning_model = ft_model
 
-        # Create the training parameter
-        training_session.training_parameter = training_param
-
         try:
             session.add(ft_model)
+            session.add(training_session)
             session.commit()
+
+            fm_no_value = ft_model.fm_no
+            session_no_value = training_session.session_no
+
+            # Build training_paramter
+            training_parameter = TrainingParameter.from_schema(
+                training_param, session_no_value, fm_no_value
+            )
+
+            training_session.training_parameter = training_parameter
+
+            session.add(training_parameter)
+            session.commit()
+
         except Exception as e:
             session.rollback()
             raise e

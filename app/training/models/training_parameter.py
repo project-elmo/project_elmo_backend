@@ -6,6 +6,7 @@ from sqlalchemy import (
     String,
     ForeignKey,
 )
+from app.training.schemas.training import FinetuningRequestSchema
 from core.db import Base
 
 
@@ -34,3 +35,24 @@ class TrainingParameter(Base):
     run_on_gpu = Column(Boolean, nullable=False)
     load_best_at_the_end = Column(Boolean, nullable=False)
     dataset = Column(String(255), nullable=False, comment="훈련에 쓰인 dataset file path")
+
+    @classmethod
+    def from_schema(cls, schema: FinetuningRequestSchema, session_no: int, fm_no: int):
+        return cls(
+            session_no=session_no,
+            fm_no=fm_no,
+            model_name=schema.pm_name,
+            epochs=schema.epochs,
+            save_strategy=schema.save_strategy,
+            logging_strategy=schema.logging_strategy,
+            evaluation_strategy=schema.evaluation_strategy,
+            learning_rate=schema.learning_rate,
+            weight_decay=schema.weight_decay,
+            batch_size=schema.batch_size,
+            eval_steps=schema.eval_steps,
+            save_steps=schema.save_steps,
+            save_total_limits=schema.save_total_limits,
+            run_on_gpu=schema.run_on_gpu,
+            load_best_at_the_end=schema.load_best_at_the_end,
+            dataset=schema.dataset,
+        )
