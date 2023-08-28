@@ -1,5 +1,6 @@
 from datetime import datetime
 from loguru import logger
+import requests
 import torch
 import os
 import logging
@@ -12,8 +13,11 @@ from transformers import (
     Trainer,
     TrainingArguments,
     PreTrainedTokenizer,
+    TrainerCallback,
+    TrainerControl,
 )
 from datasets import load_dataset
+from app.training.llm.std_writer import CustomStdErrWriter
 
 from app.training.schemas.training import (
     FinetuningRequestSchema,
@@ -89,13 +93,22 @@ def train_model(training_param: FinetuningRequestSchema):
         model=model,
         args=training_args,
         train_dataset=tokenized_datasets["train"],
+        callbacks=[HealthCheckCallback(model_name)],
     )
 
     start_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     logging.info(f"Training completed for {model_name} at {start_time}")
 
-    # training
-    trainer.train()
+    # Send the progress via socket
+    std_writer = CustomStdErrWriter(model_name)
+
+    try:
+        # Start training
+        trainer.train()
+    finally:
+        # Restore stderr
+        std_writer.close()
+
     end_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     trainer.save_model(os.path.join(path, ts_model_name))
 
@@ -129,3 +142,22 @@ def tokenize_qa(tokenizer: PreTrainedTokenizer):
             raise e
 
     return _tokenize
+
+
+class HealthCheckCallback(TrainerCallback):
+    def __init__(self, repo_id):
+        self.repo_id = repo_id
+
+    def on_log(self, args, state, control, **kwargs):
+        # Implement a simple check to the health endpoint.
+        # If the endpoint is down, set `control.should_training_stop` to True.
+        try:
+            response = requests.get("http://0.0.0.0:8000/health")
+            if response.status_code != 200:
+                control.should_training_stop = True
+                Cache.delete(f"{self.repo_id}_training")
+                logging.debug(f"Training stopped")
+        except:
+            logging.debug(f"Training stopped")
+            Cache.delete(f"{self.repo_id}_training")
+            control.should_training_stop = True

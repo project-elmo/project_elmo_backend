@@ -8,6 +8,6 @@ def reset_progress(total: str, model_name: str):
 
 def update_progress(progress_data: ProgressResponseSchema):
     Cache.set(
-        progress_data.model_name,
+        f"{progress_data.model_name}_{progress_data.task}",
         progress_data.model_dump_json(),
     )

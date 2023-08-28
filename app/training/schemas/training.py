@@ -15,8 +15,8 @@ class ProgressResponseSchema(BaseModel):
 
     task: str  # [downloading, training, None]
     model_name: str
-    total: str  # 100 for 'training', file size for 'downloading' eg. 100M or 1GB
-    curr_size: str  # always 0 for 'training', current file size for 'downloading'
+    total: str  # total steps for 'training', file size for 'downloading' eg. 100M or 1GB
+    curr_size: str  # current steps 0 for 'training', current file size for 'downloading'
     curr_percent: int
     start_time: str
     end_time: str

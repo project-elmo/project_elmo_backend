@@ -44,6 +44,7 @@ async def start_hub_download(background_tasks: BackgroundTasks, model_name: str)
     background_tasks.add_task(Cache.set, task_key, model_name)
     background_tasks.add_task(hub_download, model_name)
     background_tasks.add_task(Cache.delete, task_key)
+    background_tasks.add_task(Cache.delete, model_name)
 
     return Response(status_code=200, content="Download in progress!")
 
@@ -52,6 +53,8 @@ async def start_hub_download(background_tasks: BackgroundTasks, model_name: str)
     "/remove_pretrained/", dependencies=[Depends(PermissionDependency([AllowAll]))]
 )
 async def remove_pretrained(model_name: str):
+    Cache.delete(f"{model_name}_{DOWNLOADING}")
+
     transformed_name = transform_model_name(model_name)
     huggingface_dir = get_huggingface_dir()
 
@@ -59,6 +62,7 @@ async def remove_pretrained(model_name: str):
 
     if os.path.exists(dir_path) and os.path.isdir(dir_path):
         shutil.rmtree(dir_path)
+
         return {
             "status": "success",
             "message": f"Directory {transformed_name} deleted successfully.",
@@ -147,7 +151,8 @@ async def start_training(training_param: FinetuningRequestSchema):
 
     Cache.set(task_key, training_param.pm_name)
     train_model(training_param)
-    Cache.delete_startswith, task_key
+    Cache.delete(task_key)
+    Cache.delete(f"{training_param.pm_name}_{TRAINING}")
 
     return Response(status_code=200, content="Training started in the background")
 
@@ -164,10 +169,13 @@ async def websocket_endpoint(ws: WebSocket):
                 task_key = f"{TASK_PREFIX}{task}"
 
                 model_name = Cache.get(task_key)
+                key = f"{model_name}_{task}"
 
                 if model_name:
-                    progress_data: ProgressResponseSchema = Cache.get(model_name)
-                    await ws.send_json(progress_data)
+                    progress_data: ProgressResponseSchema = Cache.get(key)
+
+                    if progress_data:
+                        await ws.send_json(progress_data)
 
             await asyncio.sleep(0.5)  # send updates every second
 
