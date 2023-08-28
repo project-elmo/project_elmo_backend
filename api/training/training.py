@@ -150,7 +150,7 @@ async def start_training(training_param: FinetuningRequestSchema):
     task_key = f"{TASK_PREFIX}{TRAINING}"
 
     Cache.set(task_key, training_param.pm_name)
-    train_model(training_param)
+    await train_model(training_param)
     Cache.delete(task_key)
     Cache.delete(f"{training_param.pm_name}_{TRAINING}")
 
