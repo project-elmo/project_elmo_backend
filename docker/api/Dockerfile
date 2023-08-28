@@ -1,4 +1,4 @@
-FROM jharinn/elmo:gpu
+FROM jharinn/elmo:v2
 WORKDIR /home
 
 ENV ENV=dev
