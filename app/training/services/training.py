@@ -22,6 +22,7 @@ class TrainingService:
             user_no=user_no,
             pm_no=training_param.pm_no,
             fm_name=training_param.fm_name,
+            task=training_param.task,
         )
 
         # Create the training session
