@@ -115,11 +115,16 @@ async def get_datasets():
 
     # Check if the datasets directory exists
     if not os.path.isdir(datasets_path):
+        logger.debug(f"datasets_path: {datasets_path}")
         raise HTTPException(status_code=404, detail="Datasets directory not found")
 
     datasets = []
     for filename in os.listdir(datasets_path):
+        if filename == ".gitkeep":
+            continue
+
         file_path = os.path.join(datasets_path, filename)
+
         if os.path.isfile(file_path):
             _, file_extension = os.path.splitext(filename)
             data = DatasetResponseSchema(
@@ -133,27 +138,17 @@ async def get_datasets():
     return datasets
 
 
-@training_router.post("/training/train_pretrained_model")
+@training_router.post(
+    "/training/train_pretrained_model",
+    responses={"400": {"model": ExceptionResponseSchema}},
+)
 async def start_training(training_param: FinetuningRequestSchema):
     """Initiates a background model training task."""
     task_key = f"{TASK_PREFIX}{TRAINING}"
 
-    file_path = training_param.dataset
-    is_file = is_valid_file_path(file_path)
-    is_copy_file = copy_file(file_path, config.DATASET_DIR)
-
-    logger.debug(f"{file_path} is_file: {is_file}, is_copy_file: {is_copy_file}")
-
-    if is_file and is_copy_file:
-        filename = get_filename_from_path(file_path)
-        training_param.dataset = os.path.join(config.DATA_DIR, filename)
-
-        Cache.set(task_key, training_param.pm_name)
-        train_model(training_param)
-        Cache.delete_startswith, task_key
-    else:
-        logger.debug("Wrong file path")
-        raise HTTPException(status_code=404, detail="File not found")
+    Cache.set(task_key, training_param.pm_name)
+    train_model(training_param)
+    Cache.delete_startswith, task_key
 
     return Response(status_code=200, content="Training started in the background")
 

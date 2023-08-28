@@ -28,6 +28,7 @@ websockets = "^11.0.3"
 datasets = "^2.14.4"
 loguru = "^0.7.0"
 python-multipart = "^0.0.6"
+accelerate = "^0.22.0"
 
 [tool.poetry.dev-dependencies]
 behave = "^1.2.6"
