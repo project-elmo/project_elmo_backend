@@ -111,13 +111,14 @@ def train_model(training_param: FinetuningRequestSchema):
         std_writer.close()
 
     end_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-    trainer.save_model(os.path.join(path, ts_model_name))
-
     # compute train results
     logging.info(f"Training completed for {model_name} at {end_time}")
 
     # After training, save fine-tuned model, sessions, and parameters to the database
     ts_model_name = f"{training_param.fm_name}_{training_param.epochs}"
+
+    trainer.save_model(path)
+
     TrainingService().create_finetuning_model(
         training_param=training_param,
         start_time=start_time,
