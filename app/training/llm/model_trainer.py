@@ -107,7 +107,7 @@ async def train_model(training_param: FinetuningRequestSchema):
     try:
         Cache.set(TRAINING_CONTINUE, "True")
         result = trainer.train()
-        loss = result["training_loss"]
+        loss = result[1]
     finally:
         # Restore stderr
         std_writer.close()
