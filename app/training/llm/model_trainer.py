@@ -119,7 +119,7 @@ def train_model(training_param: FinetuningRequestSchema):
 
     trainer.save_model(path)
 
-    TrainingService().create_finetuning_model(
+    await TrainingService().create_finetuning_model(
         training_param=training_param,
         start_time=start_time,
         end_time=end_time,
