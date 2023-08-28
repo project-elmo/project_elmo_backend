@@ -43,7 +43,7 @@ async def start_hub_download(background_tasks: BackgroundTasks, model_name: str)
     task_key = f"{TASK_PREFIX}{DOWNLOADING}"
     background_tasks.add_task(Cache.set, task_key, model_name)
     background_tasks.add_task(hub_download, model_name)
-    background_tasks.add_task(Cache.delete_startswith, task_key)
+    background_tasks.add_task(Cache.delete, task_key)
 
     return Response(status_code=200, content="Download in progress!")
 
@@ -172,12 +172,10 @@ async def websocket_endpoint(ws: WebSocket):
                 model_name = Cache.get(task_key)
 
                 if model_name:
-                    progress_data: ProgressResponseSchema = Cache.get_startswith(
-                        model_name
-                    )
+                    progress_data: ProgressResponseSchema = Cache.get(model_name)
                     await ws.send_json(progress_data)
 
-            await asyncio.sleep(1)  # send updates every second
+            await asyncio.sleep(0.5)  # send updates every second
 
     except WebSocketDisconnect:
         # client diconnected

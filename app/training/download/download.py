@@ -25,13 +25,18 @@ def hub_download(repo_id: str):
         line = proc.stderr.readline()
         print("Print:" + line)
         progress_response = extract_values(line, repo_id)
-        update_progress(progress_response)
+
+        if progress_response.task != "None" and not progress_response.total.startswith(
+            "0"
+        ):
+            update_progress(progress_response)
 
 
 def extract_values(text: str, repo_id: str) -> ProgressResponseSchema:
     """
     Extract the progress from tqdm message while downloading the pre-trained model
     """
+    # Downloading model.safetensors:  63%|██████▎   | 346M/548M [00:32<00:19, 10.5MB/s]
     percent_pattern = r"(\d+)%"
     curr_size_pattern = r"(\d+[a-zA-Z]+)"
     total_size_pattern = r"/(\d+\s*[a-zA-Z]+)"
@@ -48,35 +53,14 @@ def extract_values(text: str, repo_id: str) -> ProgressResponseSchema:
         end_time_match = re.search(end_time_pattern, text)
         speed_match = re.search(speed_pattern, text)
 
-        if curr_percent_matches:
-            curr_percent = int(curr_percent_matches[0])
-        else:
-            curr_percent = 0
+        curr_percent = int(curr_percent_matches[0])
+        curr_size = curr_size_matches.group(0)
+        total = total_size_matches.group(0)[1:]
+        start_time = start_time_match.group(0)
+        end_time = end_time_match.group(1)
+        sec_per_dl = speed_match.group(1)
 
-        if curr_size_matches:
-            curr_size = curr_size_matches.group(0)
-        else:
-            curr_size = "0M"
-
-        if total_size_matches:
-            total = total_size_matches.group(0)[1:]
-        else:
-            total = "0M"
-
-        if start_time_match:
-            start_time = start_time_match.group(0)
-        else:
-            start_time = "00:00"
-
-        if end_time_match:
-            end_time = end_time_match.group(1)
-        else:
-            end_time = "00:00"
-
-        if speed_match:
-            sec_per_dl = speed_match.group(1)
-        else:
-            sec_per_dl = "0.0MB/s"
+        print(f" curr_percent: {curr_percent}, curr_size: {curr_size}, total: {total}")
 
         model_instance = ProgressResponseSchema(
             task="downloading",  # [downloading, training, None]
