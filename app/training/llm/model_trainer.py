@@ -103,7 +103,7 @@ def train_model(training_param: FinetuningRequestSchema):
     std_writer = CustomStdErrWriter(model_name)
 
     try:
-        Cache.set("training_should_continue", True)
+        Cache.set("training_should_continue", "True")
         # Start training
         trainer.train()
     finally:
@@ -155,7 +155,7 @@ class HealthCheckCallback(TrainerCallback):
         try:
             response = requests.get("http://0.0.0.0:8000/health")
             if response.status_code != 200:
-                control.should_training_stop = True
+                control.should_training_stop = "True"
                 Cache.delete(f"{self.repo_id}_training")
                 logging.debug(f"Training stopped")
         except:
@@ -165,7 +165,7 @@ class HealthCheckCallback(TrainerCallback):
 
         training_should_continue = Cache.get("training_should_continue")
 
-        if not training_should_continue:  # Check shared state
+        if not training_should_continue == "True":
             control.should_training_stop = True
             Cache.delete(f"{self.repo_id}_training")
             logging.debug(f"Training stopped due to stop_training command")

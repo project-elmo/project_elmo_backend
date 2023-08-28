@@ -178,7 +178,7 @@ async def receive_commands(ws: WebSocket):
     while True:
         message = await ws.receive_text()
         if message == "stop_training":
-            Cache.set("training_should_continue", False)
+            Cache.set("training_should_continue", "False")
 
 
 @training_router.websocket("/ws/progress/")
