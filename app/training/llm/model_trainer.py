@@ -3,7 +3,6 @@ from loguru import logger
 import requests
 import torch
 import os
-import logging
 
 from fastapi.responses import JSONResponse
 from transformers import (
@@ -23,7 +22,7 @@ from app.training.schemas.training import (
     FinetuningRequestSchema,
 )
 from app.training.services.training import TrainingService
-from core.helpers.cache import Cache
+from core.helpers.cache import *
 from core.utils.file_util import *
 from core.config import config
 
@@ -34,7 +33,7 @@ async def train_model(training_param: FinetuningRequestSchema):
 
     # Load the pre-trained model and tokenizer
     model_name = training_param.pm_name
-    path = config.MODELS_DIR
+    path = os.path.join(config.MODELS_DIR, model_name)
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
@@ -97,26 +96,31 @@ async def train_model(training_param: FinetuningRequestSchema):
     )
 
     start_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-    logging.info(f"Training completed for {model_name} at {start_time}")
+    logger.info(f"Training completed for {model_name} at {start_time}")
 
     # Send the progress via socket
     std_writer = CustomStdErrWriter(model_name)
 
+    result = ""
+
     try:
         Cache.set(TRAINING_CONTINUE, "True")
-        trainer.train()
+        result = trainer.train()
     finally:
         # Restore stderr
         std_writer.close()
 
     end_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-    # compute train results
-    logging.info(f"Training completed for {model_name} at {end_time}")
 
     # After training, save fine-tuned model, sessions, and parameters to the database
     ts_model_name = f"{training_param.fm_name}_{training_param.epochs}"
+    ts_path = os.path.join(path, ts_model_name)
 
-    trainer.save_model(path)
+    logger.info(
+        f"Training completed for {model_name} at {end_time}, result: {result}, ts_path: {ts_path}"
+    )
+
+    trainer.save_model(ts_path)
 
     await TrainingService().create_finetuning_model(
         training_param=training_param,
@@ -139,7 +143,7 @@ def tokenize_qa(tokenizer: PreTrainedTokenizer):
             encoding["labels"] = encoding["input_ids"].copy()
             return encoding
         except KeyError as e:
-            logging.debug(e)
+            logger.debug(e)
             raise e
 
     return _tokenize
@@ -157,16 +161,18 @@ class HealthCheckCallback(TrainerCallback):
             if response.status_code != 200:
                 control.should_training_stop = "True"
                 Cache.delete(f"{self.repo_id}_training")
-                logging.debug(f"Training stopped")
-        except:
-            logging.debug(f"Training stopped")
-            Cache.delete(f"{self.repo_id}_training")
+                logger.debug(
+                    f"Training stopped"
+                )  # Change from logging.debug to logger.debug
+        except Exception as e:  # Capture the exception for a detailed log.
             control.should_training_stop = True
+            Cache.delete(f"{self.repo_id}_training")
+            logger.debug(f"Training stopped due to error: {str(e)}")
 
         training_should_continue = Cache.get(TRAINING_CONTINUE)
 
         if not training_should_continue == "True":
             control.should_training_stop = True
             Cache.delete(f"{self.repo_id}_training")
-            logging.debug(f"Training stopped due to stop_training command")
+            logger.debug(f"Training stopped due to stop_training command")
             return
