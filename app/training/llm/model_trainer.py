@@ -17,6 +17,7 @@ from transformers import (
 )
 
 from datasets import load_dataset
+from app.training.download.progress import set_result
 from app.training.llm.std_writer import CustomStdErrWriter
 
 from app.training.schemas.training import (
@@ -108,6 +109,8 @@ async def train_model(training_param: FinetuningRequestSchema):
         Cache.set(TRAINING_CONTINUE, "True")
         result = trainer.train()
         loss = result[1]
+
+        set_result(model_name, result)
     finally:
         # Restore stderr
         std_writer.close()
