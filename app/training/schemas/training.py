@@ -1,6 +1,15 @@
 from pydantic import BaseModel, ConfigDict
 
 
+class PretrainedModelResponseSchema(BaseModel):
+    pm_no: int = 1
+    name: str
+    description: str
+    version: str
+    base_model: str
+    is_downloaded: bool
+
+
 class ProgressResponseSchema(BaseModel):
     model_config = ConfigDict(protected_namespaces=("model_"))
 

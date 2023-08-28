@@ -3,15 +3,6 @@ from pydantic import BaseModel, ConfigDict, root_validator
 from typing import List
 
 
-class PretrainedModelResponseSchema(BaseModel):
-    pm_no: int = 1
-    name: str
-    description: str
-    version: str
-    base_model: str
-    is_downloaded: bool
-
-
 class FinetuningModelResponseSchema(BaseModel):
     fm_no: int = 5
     user_no: int

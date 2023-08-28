@@ -2,14 +2,12 @@ import os
 import shutil
 
 
-def get_is_downloaded(folder_path: str, folder_name: str):
+def get_is_downloaded(path: str):
     """
     Check if the file is already downloaded.
     Return True if the folder exists and contains files,
     Return False otherwise.
     """
-    path = os.path.join(folder_path, folder_name)
-
     # 1. Check if the directory exists, if not, return false
     if not os.path.exists(path):
         return False

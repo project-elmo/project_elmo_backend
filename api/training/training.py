@@ -1,4 +1,7 @@
 import os
+import shutil
+from typing import List
+
 import asyncio
 from typing import Optional
 from fastapi import (
@@ -18,6 +21,7 @@ from app.training.llm.model_trainer import train_model
 from app.training.download import hub_download
 from app.training.schemas.training import *
 from app.training.services.training import TrainingService
+from app.user.schemas import ExceptionResponseSchema
 from core.config import config
 from core.fastapi.dependencies import PermissionDependency, AllowAll
 from core.helpers.cache import Cache
@@ -51,17 +55,47 @@ async def remove_pretrained(model_name: str):
     transformed_name = transform_model_name(model_name)
     huggingface_dir = get_huggingface_dir()
 
-    file_path = os.path.join(huggingface_dir, transformed_name)
+    dir_path = os.path.join(huggingface_dir, transformed_name)
 
-    # Check if the file exists before attempting to delete
-    if os.path.exists(file_path):
-        os.remove(file_path)
+    if os.path.exists(dir_path) and os.path.isdir(dir_path):
+        shutil.rmtree(dir_path)
         return {
             "status": "success",
-            "message": f"File {transformed_name} deleted successfully.",
+            "message": f"Directory {transformed_name} deleted successfully.",
         }
     else:
-        raise HTTPException(status_code=404, detail="File not found")
+        raise HTTPException(status_code=404, detail="Directory not found")
+
+
+@training_router.get(
+    "/pretrained_models/",
+    response_model=List[PretrainedModelResponseSchema],
+    responses={"400": {"model": ExceptionResponseSchema}},
+)
+async def list_all_pretrained_models():
+    """Retrieve a list of all pre-trained models."""
+    models_db = await TrainingService().get_all_pretrained_models()
+    huggingface_dir = get_huggingface_dir()
+
+    # Convert ORM objects to Pydantic objects and set is_downloaded
+    schema_models = []
+    for db_model in models_db:
+        transformed_name = transform_model_name(db_model.name)
+        model_dir = os.path.join(huggingface_dir, transformed_name)
+        logger.debug(f"model_dir={model_dir}")
+
+        is_downloaded = get_is_downloaded(model_dir)
+        model_data = PretrainedModelResponseSchema(
+            pm_no=db_model.pm_no,
+            name=db_model.name,
+            description=db_model.description,
+            version=db_model.version,
+            base_model=db_model.base_model,
+            is_downloaded=is_downloaded,
+        )
+        schema_models.append(model_data)
+
+    return schema_models
 
 
 @training_router.post("/data_upload/")
