@@ -2,9 +2,9 @@ from typing import List
 from sqlalchemy import select
 from app.training.models.pretrained_model import PretrainedModel
 from app.training.schemas.training import FinetuningRequestSchema
+from app.training.models import FinetuningModel, TrainingSession, TrainingParameter
 
 from core.db import session
-from app.training.models import FinetuningModel, TrainingSession, TrainingParameter
 
 
 class TrainingService:

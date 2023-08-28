@@ -24,8 +24,8 @@ from app.training.schemas.training import (
 )
 from app.training.services.training import TrainingService
 from core.helpers.cache import Cache
-from core.config import config
 from core.utils.file_util import *
+from core.config import config
 
 
 async def train_model(training_param: FinetuningRequestSchema):
@@ -103,8 +103,7 @@ async def train_model(training_param: FinetuningRequestSchema):
     std_writer = CustomStdErrWriter(model_name)
 
     try:
-        Cache.set("training_should_continue", "True")
-        # Start training
+        Cache.set(TRAINING_CONTINUE, "True")
         trainer.train()
     finally:
         # Restore stderr
@@ -164,7 +163,7 @@ class HealthCheckCallback(TrainerCallback):
             Cache.delete(f"{self.repo_id}_training")
             control.should_training_stop = True
 
-        training_should_continue = Cache.get("training_should_continue")
+        training_should_continue = Cache.get(TRAINING_CONTINUE)
 
         if not training_should_continue == "True":
             control.should_training_stop = True

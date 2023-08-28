@@ -1,0 +1,8 @@
+TASK_PREFIX = "task_"
+TRAINING = "training"
+DOWNLOADING = "downloading"
+RESULT = "result"
+SOCKET_CLOSE = "socket_close"
+TRAINING_CONTINUE = "training_should_continue"
+TASK_RESULT = "task_result"
+REPO_RESULT = "{}_result"

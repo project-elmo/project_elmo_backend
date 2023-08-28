@@ -1,7 +1,6 @@
 import sys
 import re
 from app.training.download.progress import *
-
 from app.training.schemas.training import ProgressResponseSchema
 
 

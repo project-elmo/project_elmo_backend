@@ -24,7 +24,7 @@ from app.training.services.training import TrainingService
 from app.user.schemas import ExceptionResponseSchema
 from core.config import config
 from core.fastapi.dependencies import PermissionDependency, AllowAll
-from core.helpers.cache import Cache
+from core.helpers.cache import *
 from core.utils.file_util import *
 
 training_router = APIRouter()
@@ -187,7 +187,7 @@ async def receive_commands(ws: WebSocket):
     while True:
         message = await ws.receive_text()
         if message == "stop_training":
-            Cache.set("training_should_continue", "False")
+            Cache.set(TRAINING_CONTINUE, "False")
 
 
 @training_router.websocket("/ws/progress/")

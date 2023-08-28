@@ -1,5 +1,5 @@
 from app.training.schemas.training import ProgressResponseSchema
-from core.helpers.cache import Cache
+from core.helpers.cache import *
 
 
 def reset_progress(total: str, model_name: str):
@@ -14,5 +14,5 @@ def update_progress(progress_data: ProgressResponseSchema):
 
 
 def set_result(repo_id: str, result: str):
-    Cache.set(f"task_result", repo_id)
-    Cache.set(f"{repo_id}_result", result)
+    Cache.set(TASK_RESULT, repo_id)
+    Cache.set(REPO_RESULT.format(repo_id), result)
