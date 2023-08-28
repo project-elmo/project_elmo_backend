@@ -15,6 +15,7 @@ from transformers import (
     TrainerCallback,
     TrainerControl,
 )
+
 from datasets import load_dataset
 from app.training.llm.std_writer import CustomStdErrWriter
 
@@ -101,11 +102,12 @@ async def train_model(training_param: FinetuningRequestSchema):
     # Send the progress via socket
     std_writer = CustomStdErrWriter(model_name)
 
-    result = ""
+    loss = ""
 
     try:
         Cache.set(TRAINING_CONTINUE, "True")
         result = trainer.train()
+        loss = result["training_loss"]
     finally:
         # Restore stderr
         std_writer.close()
@@ -113,7 +115,9 @@ async def train_model(training_param: FinetuningRequestSchema):
     end_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
     # After training, save fine-tuned model, sessions, and parameters to the database
-    ts_model_name = f"{training_param.fm_name}_{training_param.epochs}"
+    ts_model_name = (
+        f"{training_param.fm_name}_epoch_{training_param.epochs}_loss_{loss}"
+    )
     ts_path = os.path.join(path, ts_model_name)
 
     logger.info(

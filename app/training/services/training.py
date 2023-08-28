@@ -49,11 +49,11 @@ class TrainingService:
 
             training_session.training_parameter = training_parameter
 
-            session.add(training_parameter)
-            session.commit()
+            await session.add(training_parameter)
+            await session.commit()
 
         except Exception as e:
-            session.rollback()
+            await session.rollback()
             raise e
 
     async def get_all_pretrained_models(self) -> List[PretrainedModel]:

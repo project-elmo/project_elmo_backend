@@ -28,12 +28,6 @@ from core.helpers.cache import *
 from core.utils.file_util import *
 
 training_router = APIRouter()
-
-TASK_PREFIX = "task_"
-TRAINING = "training"
-DOWNLOADING = "downloading"
-RESULT = "result"
-SOCKET_CLOSE = "socket_close"
 tasks = [DOWNLOADING, TRAINING, RESULT]
 
 
