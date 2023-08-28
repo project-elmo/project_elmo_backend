@@ -32,7 +32,9 @@ training_router = APIRouter()
 TASK_PREFIX = "task_"
 TRAINING = "training"
 DOWNLOADING = "downloading"
+RESULT = "result"
 SOCKET_CLOSE = "socket_close"
+tasks = [DOWNLOADING, TRAINING, RESULT]
 
 
 @training_router.get(
@@ -157,7 +159,7 @@ async def start_training(training_param: FinetuningRequestSchema):
     return Response(status_code=200, content="Training started in the background")
 
 
-async def send_progress(ws: WebSocket, tasks):
+async def send_progress(ws: WebSocket):
     while True:
         for task in tasks:
             task_key = f"{TASK_PREFIX}{task}"
@@ -165,11 +167,18 @@ async def send_progress(ws: WebSocket, tasks):
             model_name = Cache.get(task_key)
             key = f"{model_name}_{task}"
 
-            if model_name:
-                progress_data: ProgressResponseSchema = Cache.get(key)
+            if task == RESULT:
+                if model_name:
+                    result = Cache.get(key)
+                    await ws.send_json(result)
+                    Cache.delete(key)
+            else:
+                if model_name:
+                    progress_data: ProgressResponseSchema = Cache.get(key)
 
-                if progress_data:
-                    await ws.send_json(progress_data)
+                    if progress_data:
+                        await ws.send_json(progress_data)
+                        Cache.delete(key)
 
         await asyncio.sleep(0.5)  # send updates every half-second
 
@@ -186,10 +195,8 @@ async def websocket_endpoint(ws: WebSocket):
     await ws.accept()
     print("websocket_log_cache::", Cache.get_all())
 
-    tasks = [DOWNLOADING, TRAINING]
-
     try:
-        await asyncio.gather(send_progress(ws, tasks), receive_commands(ws))
+        await asyncio.gather(send_progress(ws), receive_commands(ws))
     except WebSocketDisconnect:
         # client disconnected
         pass

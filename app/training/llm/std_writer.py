@@ -1,6 +1,6 @@
 import sys
 import re
-from app.training.download.progress import update_progress
+from app.training.download.progress import *
 
 from app.training.schemas.training import ProgressResponseSchema
 
@@ -11,13 +11,18 @@ class CustomStdErrWriter:
         self.repo_id = repo_id
         sys.stderr = self
 
-    def write(self, msg):
+    def write(self, msg: str):
         self.original_stderr.write(f"Print: {msg}")
-        progress_response = extract_values(msg, self.repo_id)
-        if progress_response.task != "None" and not progress_response.total.startswith(
-            "0"
-        ):
-            update_progress(progress_response)
+
+        if msg.startswith("{"):
+            set_result(self.repo_id, msg)
+        else:
+            progress_response = extract_values(msg, self.repo_id)
+            if (
+                progress_response.task != "None"
+                and not progress_response.total.startswith("0")
+            ):
+                update_progress(progress_response)
 
     def flush(self):
         self.original_stderr.flush()
