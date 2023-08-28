@@ -29,7 +29,7 @@ def train_model(training_param: FinetuningRequestSchema):
     path = config.MODELS_DIR
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModel.from_pretrained(model_name, local_files_only=True, cache_dir=path)
+    model = AutoModel.from_pretrained(model_name, local_files_only=True)
 
     # Load the dataset
     dataset_path = training_param.dataset

@@ -46,3 +46,10 @@ class FinetuningRequestSchema(BaseModel):
     load_best_at_the_end: bool = False
     dataset: str = "/home/projectelmo2023/qa_Pet_Supplies.json"
     task: int = 0  # 모델의 목적:: 0 QA 1 Classification 2 Generate
+
+
+class DatasetResponseSchema(BaseModel):
+    file_path: str
+    size: int  # in bytes
+    filename: str
+    extension: str

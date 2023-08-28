@@ -16,6 +16,7 @@ services:
       - db
     volumes:
       - $PWD:/home
+      - $HOME/.cache/huggingface:/root/.cache/huggingface
   db:
     build:
       context: .

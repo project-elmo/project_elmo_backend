@@ -22,7 +22,7 @@ class Config(BaseSettings):
     RESULT_DIR: str = os.path.join(DL_DIR, "result")
     DATA_DIR: str = os.path.join(DL_DIR, "data")
     MODELS_DIR: str = os.path.join(DATA_DIR, "models")
-    DATASET_DIR: str = os.path.join(DATA_DIR, "datasets")
+    DATASET_DIR: str = os.path.join(os.path.dirname(os.getcwd()), "datasets")
 
 
 class DevelopmentConfig(Config):

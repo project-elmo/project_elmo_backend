@@ -11,17 +11,10 @@ from app.training.schemas.training import ProgressResponseSchema
 from core.config import config
 
 
-def hub_download(model_name: str):
-    models_dir = config.MODELS_DIR
-    path = os.path.join(models_dir, model_name)
-
-    execute_download(model_name, path)
-
-
-def execute_download(repo_id, path):
+def hub_download(repo_id: str):
     script_directory = os.path.dirname(os.path.abspath(__file__))
 
-    cmd = ["python", f"{script_directory}/run_load_model.py", repo_id, path]
+    cmd = ["python", f"{script_directory}/run_load_model.py", repo_id]
 
     proc = Popen(
         cmd,

@@ -21,6 +21,28 @@ def get_is_downloaded(folder_path: str, folder_name: str):
         return False
 
 
+def transform_model_name(model_name: str):
+    # Replace "/" with "--"
+    model_name = model_name.replace("/", "--")
+
+    # Add "models--" as prefix
+    model_name = "models--" + model_name
+
+    # Convert the entire string to lowercase
+    model_name = model_name.lower()
+
+    return model_name
+
+
+def get_huggingface_dir():
+    home_directory = os.path.expanduser("~")
+    cache_directory = os.path.join(home_directory, ".cache", "huggingface", "hub")
+
+    print(cache_directory)
+
+    return cache_directory
+
+
 def copy_file(source_path, destination_dir):
     if not os.path.exists(source_path):
         print(f"Source file {source_path} does not exist")

@@ -1,6 +1,5 @@
 import os
 import asyncio
-from datetime import datetime
 from typing import Optional
 from fastapi import (
     APIRouter,
@@ -10,6 +9,8 @@ from fastapi import (
     WebSocket,
     Response,
     WebSocketDisconnect,
+    UploadFile,
+    File,
 )
 from fastapi.websockets import WebSocketState
 from loguru import logger
@@ -41,6 +42,61 @@ async def start_hub_download(background_tasks: BackgroundTasks, model_name: str)
     background_tasks.add_task(Cache.delete_startswith, task_key)
 
     return Response(status_code=200, content="Download in progress!")
+
+
+@training_router.get(
+    "/remove_pretrained/", dependencies=[Depends(PermissionDependency([AllowAll]))]
+)
+async def remove_pretrained(model_name: str):
+    transformed_name = transform_model_name(model_name)
+    huggingface_dir = get_huggingface_dir()
+
+    file_path = os.path.join(huggingface_dir, transformed_name)
+
+    # Check if the file exists before attempting to delete
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        return {
+            "status": "success",
+            "message": f"File {transformed_name} deleted successfully.",
+        }
+    else:
+        raise HTTPException(status_code=404, detail="File not found")
+
+
+@training_router.post("/data_upload/")
+async def upload_file(file: UploadFile = File(...)):
+    datasets_path = config.DATASET_DIR
+    file_location = os.path.join(datasets_path, file.filename)
+
+    with open(file_location, "wb+") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    return {"filename": file.filename}
+
+
+@training_router.get("/get_datasets")
+async def get_datasets():
+    datasets_path = config.DATASET_DIR
+
+    # Check if the datasets directory exists
+    if not os.path.isdir(datasets_path):
+        raise HTTPException(status_code=404, detail="Datasets directory not found")
+
+    datasets = []
+    for filename in os.listdir(datasets_path):
+        file_path = os.path.join(datasets_path, filename)
+        if os.path.isfile(file_path):
+            _, file_extension = os.path.splitext(filename)
+            data = DatasetResponseSchema(
+                file_path=file_path,
+                size=os.path.getsize(file_path),
+                filename=filename,
+                extension=file_extension[1:],
+            )
+            datasets.append(data)
+
+    return datasets
 
 
 @training_router.post("/training/train_pretrained_model")
