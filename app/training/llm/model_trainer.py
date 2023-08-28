@@ -97,7 +97,7 @@ async def train_model(training_param: FinetuningRequestSchema):
     )
 
     start_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-    logger.info(f"Training completed for {model_name} at {start_time}")
+    logger.info(f"Training started for {model_name} at {start_time}")
 
     # Send the progress via socket
     std_writer = CustomStdErrWriter(model_name)

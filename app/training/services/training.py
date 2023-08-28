@@ -37,7 +37,7 @@ class TrainingService:
         try:
             session.add(ft_model)
             session.add(training_session)
-            session.commit()
+            await session.commit()
 
             fm_no_value = ft_model.fm_no
             session_no_value = training_session.session_no
@@ -49,7 +49,7 @@ class TrainingService:
 
             training_session.training_parameter = training_parameter
 
-            await session.add(training_parameter)
+            session.add(training_parameter)
             await session.commit()
 
         except Exception as e:
