@@ -30,8 +30,8 @@ def extract_values(text: str, repo_id: str) -> ProgressResponseSchema:
     percent_pattern = r"(\d+)%"
     total_pattern = r"/(\d+)"
     current_pattern = r"(\d+)/"
-    start_time_pattern = r"\[(\d+:\d+)"
-    end_time_pattern = r"<(\d+:\d+:\d+)"
+    start_time_pattern = r"\[(\d{1,2}:\d{1,2}:\d{1,2}|\d{1,2}:\d{1,2})"
+    end_time_pattern = r"<(\d{1,2}:\d{1,2}:\d{1,2}|\d{1,2}:\d{1,2})"
     speed_pattern = r"(\d+\.\d+s/it)"
 
     try:

@@ -53,7 +53,7 @@ class FinetuningRequestSchema(BaseModel):
     save_total_limits: int = -1  # "unlimited" is represented as -1
     run_on_gpu: bool = True
     load_best_at_the_end: bool = False
-    dataset: str = "/home/projectelmo2023/qa_Pet_Supplies.json"
+    dataset: str = "/home/datasets/qa_pet_small.json"
     task: int = 0  # 모델의 목적:: 0 QA 1 Classification 2 Generate
 
 
