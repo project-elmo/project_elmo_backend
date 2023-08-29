@@ -56,20 +56,16 @@ async def train_model(training_param: Union[FinetuningRequestSchema, TrainingSes
     logger.info(f"Training started for {model_name} at {start_time}")
 
     # Send the progress via socket
-    result = send_progress(start_training, trainer, training_param, initial_training, fm_name_path)
+    result = await send_progress(start_training, trainer, training_param, initial_training, fm_name_path)
 
     end_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-    logger.info(
-            f"Training completed for {model_name} at {end_time}, result: {result}, ts_path: {ts_path}"
-        )
-    
-    # Save Model
+
     training_param.ts_model_name = training_param.ts_model_name or get_model_name(training_param, result, initial_training)
     uuid = get_uuid()
     ts_path = os.path.join(fm_name_path, uuid)
-
     logger.info(f"Training completed for {model_name} at {end_time}, result: {result}, ts_path: {ts_path}")
 
+    # Save Model
     trainer.save_model(ts_path)
 
     # Set paraent_session_no
@@ -110,18 +106,18 @@ def tokenize_qa(tokenizer: PreTrainedTokenizer):
 
     return _tokenize
 
-def send_progress(func: Callable[..., NamedTuple], *args: Any, **kwargs: Dict[str, Any]) -> NamedTuple:
+async def send_progress(func: Callable[..., NamedTuple], *args: Any, **kwargs: Dict[str, Any]) -> NamedTuple:
     """
     Sends progress metrics of a given function using a socket.
     """
-    model_name = args[2].pm_name
+    model_name = args[1].pm_name
     logger.info(f"model_name: {model_name}")
 
     # Send the progress via socket
     std_writer = CustomStdErrWriter(model_name)
     
     try:
-        result = func(*args, **kwargs)
+        result = await func(*args)
 
         result_msg = {
             "task": "task_result",
@@ -199,11 +195,11 @@ def setup_training(model: PreTrainedModel, training_args: TrainingArguments, tok
 
     return trainer
 
-def start_training(trainer: Trainer, training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema], initial_training: bool, fm_name_path:str) -> NamedTuple:
+async def start_training(trainer: Trainer, training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema], initial_training: bool, fm_name_path:str) -> NamedTuple:
     if initial_training:
         result: NamedTuple = trainer.train()
     else:
-        uuid = TrainingService().get_uuid_by_session_no(training_param.parent_session_no)
+        uuid = await TrainingService().get_uuid_by_session_no(training_param.parent_session_no)
         resume_from_checkpoint = os.path.join(fm_name_path, uuid)
         result: NamedTuple = trainer.train(os.path.join(resume_from_checkpoint, training_param.parent_session_no))
     return result
