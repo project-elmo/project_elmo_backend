@@ -114,8 +114,9 @@ def send_progress(func: Callable[..., NamedTuple], *args: Any, **kwargs: Dict[st
     """
     Sends progress metrics of a given function using a socket.
     """
-    model_name = kwargs.get("pm_name")
-    
+    model_name = args[2].pm_name
+    logger.info(f"model_name: {model_name}")
+
     # Send the progress via socket
     std_writer = CustomStdErrWriter(model_name)
     
@@ -131,6 +132,7 @@ def send_progress(func: Callable[..., NamedTuple], *args: Any, **kwargs: Dict[st
         result_msg.update(metrics)
         metrics_json = json.dumps(result_msg)  
 
+        logger.info(f"metrics_json: {metrics_json}")
         set_result(model_name, metrics_json)
         
     finally:
