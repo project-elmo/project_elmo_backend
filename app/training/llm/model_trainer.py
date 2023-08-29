@@ -201,7 +201,7 @@ async def start_training(trainer: Trainer, training_param: Union[FinetuningReque
     else:
         uuid = await TrainingService().get_uuid_by_session_no(training_param.parent_session_no)
         resume_from_checkpoint = os.path.join(fm_name_path, uuid)
-        result: NamedTuple = trainer.train(os.path.join(resume_from_checkpoint, training_param.parent_session_no))
+        result: NamedTuple = trainer.train(os.path.join(resume_from_checkpoint))
     return result
 
 def get_model_name(training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema], result: NamedTuple, initial_training: bool) -> str:

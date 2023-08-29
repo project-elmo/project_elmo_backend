@@ -84,6 +84,7 @@ class TrainingService:
             )
             training_session.training_parameter = training_parameter
             
+            session.add(training_session)
             await session.commit()
 
         except Exception as e:
