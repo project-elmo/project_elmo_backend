@@ -68,9 +68,6 @@ async def train_model(training_param: Union[FinetuningRequestSchema, TrainingSes
     # Save Model
     trainer.save_model(ts_path)
 
-    # Set paraent_session_no
-    if not training_param.parent_session_no:
-        training_param.parent_session_no = "0"
 
     # Insert into DB
     if initial_training:
@@ -81,6 +78,9 @@ async def train_model(training_param: Union[FinetuningRequestSchema, TrainingSes
             uuid=uuid
         )
     else:
+        # Set paraent_session_no
+        if not training_param.parent_session_no:
+            training_param.parent_session_no = "0"
         await TrainingService().create_training_session(
             training_param=training_param,
             start_time=start_time,
