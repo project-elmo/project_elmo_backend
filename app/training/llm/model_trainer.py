@@ -1,8 +1,10 @@
+from typing import NamedTuple, Dict
 from datetime import datetime
 from loguru import logger
 import requests
 import torch
 import os
+import json
 
 from fastapi.responses import JSONResponse
 from transformers import (
@@ -107,10 +109,20 @@ async def train_model(training_param: FinetuningRequestSchema):
 
     try:
         Cache.set(TRAINING_CONTINUE, "True")
-        result = trainer.train()
+        result:NamedTuple = trainer.train()
         loss = result[1]
 
-        set_result(model_name, result)
+        result_msg = {
+            "task": "task_result",
+            "model_name": model_name
+        }
+
+        metrics: Dict = result[2]
+        result_msg.update(metrics)
+        metrics_json = json.dumps(result_msg)  
+
+        set_result(model_name, metrics_json)
+
     finally:
         # Restore stderr
         std_writer.close()

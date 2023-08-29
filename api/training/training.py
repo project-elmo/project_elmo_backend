@@ -164,8 +164,12 @@ async def send_progress(ws: WebSocket):
             if task == RESULT:
                 if model_name:
                     result = Cache.get(key)
-                    await ws.send_json(result)
-                    Cache.delete(key)
+                    logger.info(result)
+                    
+                    if result:
+                        await ws.send_json(result)
+                        Cache.delete(key)
+                        Cache.delete(task_key)
             else:
                 if model_name:
                     progress_data: ProgressResponseSchema = Cache.get(key)
