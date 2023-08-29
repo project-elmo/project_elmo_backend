@@ -11,8 +11,6 @@ class PretrainedModelResponseSchema(BaseModel):
 
 
 class ProgressResponseSchema(BaseModel):
-    model_config = ConfigDict(protected_namespaces=("model_"))
-
     task: str  # [downloading, training, None]
     model_name: str
     total: str  # total steps for 'training', file size for 'downloading' eg. 100M or 1GB
@@ -37,10 +35,32 @@ class ProgressResponseSchema(BaseModel):
 
 
 class FinetuningRequestSchema(BaseModel):
-    model_config = ConfigDict(protected_namespaces=("model_", "elapsed_", "e"))
     pm_no: int = 1
     pm_name: str = "gpt2"
-    fm_name: str = "gpt2_chat"
+    fm_name: str = "gpt2_chat"  # 파인튜닝 후 저장할 모델의 이름
+    ts_model_name: str = "" # 해당 세션으로 파인튜닝된 모델의 이름-기본값: epoch, loss로 표시
+    epochs: int = 3
+    save_strategy: str = "steps"
+    logging_strategy: str = "steps"
+    evaluation_strategy: str = "no"
+    learning_rate: float = 5.00e-05
+    weight_decay: float = 0.0
+    batch_size: int = 8
+    eval_steps: int = 500
+    save_steps: int = 500
+    save_total_limits: int = -1  # "unlimited" is represented as -1
+    run_on_gpu: bool = True
+    load_best_at_the_end: bool = False
+    dataset: str = "/home/datasets/qa_pet_small.json"
+    task: int = 0  # 모델의 목적:: 0 QA 1 Classification 2 Generate
+
+class TrainingSessionRequestSchema(BaseModel):
+    pm_no: int = 1
+    pm_name: str = "gpt2"
+    fm_no: int =1 
+    fm_name: str = "gpt2_chat" # 기존에 저장된 파인튜닝된 모델의 이름
+    parent_session_no:str=""
+    ts_model_name: str = "" # 해당 세션으로 파인튜닝된 모델의 이름-기본값: epoch, loss로 표시
     epochs: int = 3
     save_strategy: str = "steps"
     logging_strategy: str = "steps"

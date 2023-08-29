@@ -136,7 +136,6 @@ async def get_datasets():
 
     return datasets
 
-
 @training_router.post(
     "/training/train_pretrained_model",
     responses={"400": {"model": ExceptionResponseSchema}},
@@ -146,11 +145,26 @@ async def start_training(training_param: FinetuningRequestSchema):
     task_key = f"{TASK_PREFIX}{TRAINING}"
 
     Cache.set(task_key, training_param.pm_name)
-    await train_model(training_param)
+    await train_model(training_param, initial_training=True)
     Cache.delete(task_key)
     Cache.delete(f"{training_param.pm_name}_{TRAINING}")
 
     return Response(status_code=200, content="Training started in the background")
+
+@training_router.post(
+    "/training/re_train_model",
+    responses={"400": {"model": ExceptionResponseSchema}},
+)
+async def start_re_training(training_param: TrainingSessionRequestSchema):
+    """Initiates a background re-training task."""
+    task_key = f"{TASK_PREFIX}{TRAINING}"
+
+    Cache.set(task_key, training_param.pm_name)
+    await train_model(training_param, initial_training=False)
+    Cache.delete(task_key)
+    Cache.delete(f"{training_param.pm_name}_{TRAINING}")
+
+    return Response(status_code=200, content="Re-training started in the background")
 
 
 async def send_progress(ws: WebSocket):

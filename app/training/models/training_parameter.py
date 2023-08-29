@@ -1,3 +1,4 @@
+from typing import Union
 from sqlalchemy import (
     Boolean,
     Column,
@@ -6,7 +7,7 @@ from sqlalchemy import (
     String,
     ForeignKey,
 )
-from app.training.schemas.training import FinetuningRequestSchema
+from app.training.schemas.training import FinetuningRequestSchema, TrainingSessionRequestSchema
 from core.db import Base
 
 
@@ -37,7 +38,7 @@ class TrainingParameter(Base):
     dataset = Column(String(255), nullable=False, comment="훈련에 쓰인 dataset file path")
 
     @classmethod
-    def from_schema(cls, schema: FinetuningRequestSchema, session_no: int, fm_no: int):
+    def from_schema(cls, schema: Union[FinetuningRequestSchema, TrainingSessionRequestSchema], session_no: int, fm_no: int):
         return cls(
             session_no=session_no,
             fm_no=fm_no,

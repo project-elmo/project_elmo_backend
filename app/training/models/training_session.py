@@ -18,7 +18,10 @@ class TrainingSession(Base):
         DateTime, default=func.now(), nullable=False, comment="YYYY-MM-DD HH:MM:SS"
     )
     ts_model_name = Column(
-        String(50), nullable=False, comment="해당 세션으로 파인튜닝된 모델의 이름-epoch, loss율로 표시"
+        String(50), nullable=False, comment="해당 세션으로 파인튜닝된 모델의 이름-기본값: epoch, loss로 표시"
+    )
+    uuid = Column(
+        String(50), nullable=False, comment="저장 폴더명에 사용되는 uuid"
     )
 
     finetuning_model = relationship(
