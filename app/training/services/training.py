@@ -19,7 +19,7 @@ class TrainingService:
         uuid: str,
         user_no: int = 1,  # TODO: fix,
         parent_session_no: int = 0,  # This will convert into "". The value of the root node for sessions should be an empty string.
-    ) -> None:
+    ) -> FinetuningModel:
         
         try:
             # Create the fine-tuned model
@@ -52,6 +52,8 @@ class TrainingService:
             training_session.training_parameter = training_parameter
             
             await session.commit()
+            await session.refresh(ft_model)
+
             return ft_model
 
         except Exception as e:
@@ -65,8 +67,7 @@ class TrainingService:
         start_time: str,
         end_time: str,
         uuid: str,
-        user_no: int = 1,  # TODO: fix,
-    ) -> None:
+    ) -> TrainingSession:
         try:
             # Create the training session
             training_session = TrainingSession(
@@ -88,6 +89,17 @@ class TrainingService:
             
             session.add(training_session)
             await session.commit()
+            await session.refresh(training_session)
+
+            query = (
+            select(TrainingSession)
+                .options(
+                    joinedload(TrainingSession.finetuning_model).joinedload(FinetuningModel.pretrained_model)
+                )
+                .filter(TrainingSession.session_no == training_session.session_no)
+            )
+            result = await session.execute(query)
+            return result.scalar()
 
         except Exception as e:
             await session.rollback()

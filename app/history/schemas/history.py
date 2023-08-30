@@ -10,7 +10,9 @@ class FinetuningModelResponseSchema(BaseModel):
     pm_no: int
     pm_name: str
     fm_description: str
-
+    
+    class Config:
+        from_attributes = True
 
 class TrainingSessionResponseSchema(BaseModel):
     session_no: str = "3"
@@ -22,6 +24,10 @@ class TrainingSessionResponseSchema(BaseModel):
     start_time: datetime
     end_time: datetime
     ts_model_name: str
+
+    class Config:
+        from_attributes = True
+
 
 
 class TrainingParameterResponseSchema(BaseModel):
@@ -42,3 +48,6 @@ class TrainingParameterResponseSchema(BaseModel):
     run_on_gpu: bool
     load_best_at_the_end: bool
     dataset: str
+
+    class Config:
+        from_attributes = True

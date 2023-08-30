@@ -162,6 +162,7 @@ async def start_training(training_param: FinetuningRequestSchema):
     finetuning_model: FinetuningModel = await train_model(training_param, initial_training=True)
     Cache.delete(task_key)
     Cache.delete(f"{training_param.pm_name}_{TRAINING}")
+
     if finetuning_model:
         response = FinetuningModelResponseSchema(
             fm_no = finetuning_model.fm_no,
@@ -202,7 +203,7 @@ async def start_re_training(training_param: TrainingSessionRequestSchema):
     Cache.delete(f"{training_param.pm_name}_{TRAINING}")
     if session_model:
             response = TrainingSessionResponseSchema(
-                session_no = session_model.session_no,
+                session_no = str(session_model.session_no),
                 fm_no = session_model.fm_no,
                 fm_name = training_param.fm_name,
                 pm_no = session_model.pm_no,
@@ -242,7 +243,7 @@ async def send_progress(ws: WebSocket):
                         await ws.send_json(progress_data)
                         Cache.delete(key)
 
-        await asyncio.sleep(0.5)  # send updates every half-second
+            await asyncio.sleep(0.5)  # send updates every half-second
 
 
 async def receive_commands(ws: WebSocket):
