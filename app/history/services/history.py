@@ -11,11 +11,6 @@ from core.db import session
 
 
 class HistoryService:
-    async def get_all_pretrained_models(self) -> List[PretrainedModel]:
-        query = select(PretrainedModel)
-        result = await session.execute(query)
-        return result.scalars().all()
-
     async def get_all_finetuned_models(self) -> List[FinetuningModel]:
         query = select(FinetuningModel).options(joinedload(FinetuningModel.pretrained_model))
         result = await session.execute(query)

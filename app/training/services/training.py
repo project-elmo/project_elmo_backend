@@ -99,3 +99,8 @@ class TrainingService:
         result = await session.execute(query)
         record = result.scalar()
         return record
+    
+    async def get_all_pretrained_models(self) -> List[PretrainedModel]:
+        query = select(PretrainedModel)
+        result = await session.execute(query)
+        return result.scalars().all()
