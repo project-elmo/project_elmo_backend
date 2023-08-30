@@ -18,10 +18,8 @@ class Config(BaseSettings):
     CELERY_BACKEND_URL: str = "redis://:password123@localhost:6379/0"
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
-    DL_DIR: str = os.path.join(os.environ["HOME"], "elmo")
-    RESULT_DIR: str = os.path.join(DL_DIR, "result")
-    DATA_DIR: str = os.path.join(DL_DIR, "data")
-    MODELS_DIR: str = os.path.join(DATA_DIR, "models")
+    DL_DIR: str = os.path.join(os.environ["HOME"], ".cache","huggingface")
+    RESULT_DIR: str = os.path.join(DL_DIR, "elmo", "result")
     DATASET_DIR: str = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "datasets"
     )

@@ -6,7 +6,6 @@ import requests
 import torch
 import os
 import json
-from fastapi.responses import JSONResponse
 from transformers import (
     GPT2LMHeadModel,
     AutoTokenizer,
@@ -72,7 +71,7 @@ async def train_model(training_param: Union[FinetuningRequestSchema, TrainingSes
 
     # Insert into DB
     if initial_training:
-        finetuning_model = await TrainingService().create_finetuning_model(
+        finetuning_model: FinetuningModel = await TrainingService().create_finetuning_model(
             training_param=training_param,
             start_time=start_time,
             end_time=end_time,
@@ -84,7 +83,7 @@ async def train_model(training_param: Union[FinetuningRequestSchema, TrainingSes
         # Set paraent_session_no
         if not training_param.parent_session_no:
             training_param.parent_session_no = "0"
-        session = TrainingSession = await TrainingService().create_training_session(
+        session: TrainingSession = await TrainingService().create_training_session(
             training_param=training_param,
             start_time=start_time,
             end_time=end_time,
