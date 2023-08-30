@@ -27,6 +27,8 @@ services:
       - '3306:3306'
     networks:
       - backend
+    volumes:
+      - mysql_data:/var/lib/mysql
   redis:
     build:
       context: .
@@ -41,3 +43,6 @@ services:
 networks:
   backend:
     driver: 'bridge'
+
+volumes:
+  mysql_data:
