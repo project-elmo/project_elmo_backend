@@ -1,6 +1,7 @@
 from typing import List
 from loguru import logger
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 from app.training.models.pretrained_model import PretrainedModel
 from app.training.schemas.training import FinetuningRequestSchema, TrainingSessionRequestSchema
@@ -51,6 +52,7 @@ class TrainingService:
             training_session.training_parameter = training_parameter
             
             await session.commit()
+            return ft_model
 
         except Exception as e:
             await session.rollback()
@@ -91,32 +93,6 @@ class TrainingService:
             await session.rollback()
             logger.error(f"Error while inserting: {e}")
             raise e
-
-    async def get_all_pretrained_models(self) -> List[PretrainedModel]:
-        query = select(PretrainedModel)
-        result = await session.execute(query)
-        return result.scalars().all()
-
-    async def get_all_finetuned_models(self) -> List[FinetuningModel]:
-        query = select(FinetuningModel)
-        result = await session.execute(query)
-        return result.scalars().all()
-
-    async def get_training_sessions_by_fm(self, fm_no: int) -> List[TrainingSession]:
-        query = select(TrainingSession).where(TrainingSession.fm_no == fm_no)
-        result = await session.execute(query)
-        return result.scalars().all()
-
-    async def get_training_parameter_by_session(
-        self, session_no: int
-    ) -> TrainingParameter:
-        query = (
-            select(TrainingParameter)
-            .join(TrainingSession)
-            .where(TrainingSession.session_no == session_no)
-        )
-        result = await session.execute(query)
-        return result.scalars().first()
 
     async def get_uuid_by_session_no(self, session_no: int) -> str:
         query = select(TrainingSession.uuid).where(TrainingSession.session_no == session_no)

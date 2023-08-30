@@ -17,8 +17,10 @@ from fastapi import (
 )
 from fastapi.websockets import WebSocketState
 from loguru import logger
+from app.history.schemas.history import FinetuningModelResponseSchema, TrainingSessionResponseSchema
 from app.training.llm.model_trainer import train_model
 from app.training.download import hub_download
+from app.training.models import TrainingSession, FinetuningModel
 from app.training.schemas.training import *
 from app.training.services.training import TrainingService
 from app.user.schemas import ExceptionResponseSchema
@@ -138,33 +140,81 @@ async def get_datasets():
 
 @training_router.post(
     "/training/train_pretrained_model",
+    response_model=FinetuningModelResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
 )
 async def start_training(training_param: FinetuningRequestSchema):
-    """Initiates a background model training task."""
+    """
+    Initiates a background model training task.
+
+    Args:
+        training_param (FinetuningRequestSchema): Parameters required for the training.
+
+    Returns:
+        FinetuningModel: The trained model created by this call.
+
+    Raises:
+        ExceptionResponseSchema: If the trained model is not created successfully.
+    """
     task_key = f"{TASK_PREFIX}{TRAINING}"
 
     Cache.set(task_key, training_param.pm_name)
-    await train_model(training_param, initial_training=True)
+    finetuning_model: FinetuningModel = await train_model(training_param, initial_training=True)
     Cache.delete(task_key)
     Cache.delete(f"{training_param.pm_name}_{TRAINING}")
+    if finetuning_model:
+        response = FinetuningModelResponseSchema(
+            fm_no = finetuning_model.fm_no,
+            fm_name = finetuning_model.fm_name,
+            user_no = finetuning_model.user_no,
+            pm_no = finetuning_model.pm_no,
+            pm_name = training_param.pm_name,
+            fm_description = finetuning_model.fm_description,
+        )
+        return response
+    else:
+        return {"404": {"model": ExceptionResponseSchema}}
 
-    return Response(status_code=200, content="Training started in the background")
 
 @training_router.post(
     "/training/re_train_model",
+    response_model=TrainingSessionResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
 )
 async def start_re_training(training_param: TrainingSessionRequestSchema):
-    """Initiates a background re-training task."""
+    """
+    Initiates a background re-training task.
+
+    Args:
+        training_param (TrainingSessionRequestSchema): Parameters required for re-training.
+
+    Returns:
+        TrainingSession: The training session created by this call.
+
+    Raises:
+        ExceptionResponseSchema: If the training session is not created successfully.
+    """
     task_key = f"{TASK_PREFIX}{TRAINING}"
 
     Cache.set(task_key, training_param.pm_name)
-    await train_model(training_param, initial_training=False)
+    session_model: TrainingSession = await train_model(training_param, initial_training=False)
     Cache.delete(task_key)
     Cache.delete(f"{training_param.pm_name}_{TRAINING}")
-
-    return Response(status_code=200, content="Re-training started in the background")
+    if session_model:
+            response = TrainingSessionResponseSchema(
+                session_no = session_model.session_no,
+                fm_no = session_model.fm_no,
+                fm_name = training_param.fm_name,
+                pm_no = session_model.pm_no,
+                pm_name = training_param.pm_name,
+                parent_session_no = session_model.parent_session_no,
+                start_time = session_model.start_time,
+                end_time = session_model.end_time,
+                ts_model_name = session_model.ts_model_name,
+            )
+            return response
+    else:
+        return {"404": {"model": ExceptionResponseSchema}}
 
 
 async def send_progress(ws: WebSocket):

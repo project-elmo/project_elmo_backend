@@ -23,4 +23,4 @@ class PretrainedModel(Base):
         comment='훈련을 위한 파라미터와 기본값. json 형식의 긴 텍스트로 저장. 예: {"batch_size": 32, "learning_rate": 1e2222, ...}',
     )
 
-    finetuning_models = relationship("FinetuningModel", backref="pretrained_model")
+    finetuning_models = relationship("FinetuningModel", back_populates="pretrained_model")

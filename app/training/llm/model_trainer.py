@@ -22,6 +22,7 @@ from transformers import (
 from datasets import load_dataset, Dataset
 from app.training.download.progress import set_result
 from app.training.llm.std_writer import CustomStdErrWriter
+from app.training.models import FinetuningModel, TrainingSession
 
 from app.training.schemas.training import (
     FinetuningRequestSchema,
@@ -33,7 +34,7 @@ from core.utils.file_util import *
 from core.config import config
 
 
-async def train_model(training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema], initial_training: bool):
+async def train_model(training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema], initial_training: bool) -> Union[FinetuningModel, TrainingSession] :
     # Check if CUDA is available
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -71,22 +72,26 @@ async def train_model(training_param: Union[FinetuningRequestSchema, TrainingSes
 
     # Insert into DB
     if initial_training:
-        await TrainingService().create_finetuning_model(
+        finetuning_model = await TrainingService().create_finetuning_model(
             training_param=training_param,
             start_time=start_time,
             end_time=end_time,
             uuid=uuid
         )
+
+        return finetuning_model
     else:
         # Set paraent_session_no
         if not training_param.parent_session_no:
             training_param.parent_session_no = "0"
-        await TrainingService().create_training_session(
+        session = TrainingSession = await TrainingService().create_training_session(
             training_param=training_param,
             start_time=start_time,
             end_time=end_time,
             uuid=uuid
         )
+
+        return session
 
 def tokenize_qa(tokenizer: PreTrainedTokenizer):
     def _tokenize(batch):

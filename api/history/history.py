@@ -3,13 +3,13 @@ from fastapi import (
     APIRouter,
     HTTPException,
 )
+from loguru import logger
 
 from app.history.schemas.history import *
+from app.history.services.history import HistoryService
 from app.user.schemas import ExceptionResponseSchema
-from app.training.services.training import TrainingService
 
 history_router = APIRouter()
-
 
 @history_router.get(
     "/finetuned_models/",
@@ -18,7 +18,7 @@ history_router = APIRouter()
 )
 async def list_all_finetuned_models():
     """Retrieve a list of all fine-tuned models."""
-    models = await TrainingService().get_all_finetuned_models()
+    models = await HistoryService().get_all_finetuned_models()
     return models
 
 
@@ -29,7 +29,7 @@ async def list_all_finetuned_models():
 )
 async def list_training_sessions_by_fm(fm_no: int):
     """Retrieve a list of training sessions by their fm_no."""
-    sessions = await TrainingService().get_training_sessions_by_fm(fm_no=fm_no)
+    sessions = await HistoryService().get_training_sessions_by_fm(fm_no=fm_no)
 
     # Convert the integer fields to strings
     for session in sessions:
@@ -49,7 +49,7 @@ async def list_training_sessions_by_fm(fm_no: int):
 )
 async def get_training_parameter_by_session_no(session_no: int):
     """Retrieve training parameters by session number."""
-    training_param = await TrainingService().get_training_parameter_by_session(
+    training_param = await HistoryService().get_training_parameter_by_session(
         session_no=session_no
     )
 

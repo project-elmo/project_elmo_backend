@@ -24,3 +24,8 @@ class FinetuningModel(Base):
     training_sessions = relationship(
         "TrainingSession", back_populates="finetuning_model"
     )
+    pretrained_model = relationship("PretrainedModel", back_populates="finetuning_models")
+
+    @property
+    def pm_name(self):
+        return self.pretrained_model.name

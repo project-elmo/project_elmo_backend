@@ -30,3 +30,15 @@ class TrainingSession(Base):
     training_parameter = relationship(
         "TrainingParameter", uselist=False, backref="training_session"
     )
+
+    @property
+    def fm_name(self):
+        return self.finetuning_model.fm_name
+
+    @property
+    def pm_no(self):
+        return self.finetuning_model.pm_no
+
+    @property
+    def pm_name(self):
+        return self.finetuning_model.pm_name
