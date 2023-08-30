@@ -208,7 +208,7 @@ async def start_re_training(training_param: TrainingSessionRequestSchema):
                 fm_name = training_param.fm_name,
                 pm_no = session_model.pm_no,
                 pm_name = training_param.pm_name,
-                parent_session_no = session_model.parent_session_no,
+                parent_session_no = str(session_model.parent_session_no),
                 start_time = session_model.start_time,
                 end_time = session_model.end_time,
                 ts_model_name = session_model.ts_model_name,
