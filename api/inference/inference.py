@@ -8,7 +8,6 @@ from app.history.schemas.history import (
 )
 from app.inference.inference import execute_inference
 from app.inference.schemas.inference import (
-    ChatRequestSchema,
     MessageResponseSchema,
     MessageRequestSchema,
     TestResponseSchema,
