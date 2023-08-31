@@ -11,7 +11,7 @@ from transformers import (
     TrainerCallback,
     TrainerControl,
 )
-from app.inference.schemas.inference import TestRequestSchema
+from app.inference.schemas.inference import MessageRequestSchema
 from app.inference.services.inference import InferenceService
 from app.training.llm.model_util import (
     get_model_file_path,
@@ -79,7 +79,7 @@ def generate_text(
     return generated_text
 
 
-async def execute_inference(request_schema: TestRequestSchema) -> str:
+async def execute_inference(request_schema: MessageRequestSchema) -> str:
     session_model: TrainingSession = await InferenceService().get_session_by_session_no(
         request_schema.session_no
     )

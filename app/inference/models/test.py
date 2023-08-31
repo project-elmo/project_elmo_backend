@@ -20,4 +20,7 @@ class Test(Base):
         comment="AUTO INCRAMENT",
     )
 
+    training_session = relationship(
+        "TrainingSession", uselist=False, back_populates="tests"
+    )
     messages = relationship("Message", back_populates="test")

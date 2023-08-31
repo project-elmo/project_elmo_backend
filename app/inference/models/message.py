@@ -14,6 +14,11 @@ class Message(Base):
     msg = Column(String(5000), nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
     is_user = Column(Integer, comment="1 is user, otherwise model", nullable=False)
-    test_no = Column(Integer, ForeignKey("test.test_no"), nullable=False)
+    test_no = Column(
+        Integer,
+        ForeignKey("test.test_no"),
+        nullable=False,
+        comment="1 for user, otherwise 0",
+    )
 
     test = relationship("Test", back_populates="messages")

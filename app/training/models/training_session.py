@@ -20,9 +20,7 @@ class TrainingSession(Base):
     ts_model_name = Column(
         String(50), nullable=False, comment="해당 세션으로 파인튜닝된 모델의 이름-기본값: epoch, loss로 표시"
     )
-    uuid = Column(
-        String(50), nullable=False, comment="저장 폴더명에 사용되는 uuid"
-    )
+    uuid = Column(String(50), nullable=False, comment="저장 폴더명에 사용되는 uuid")
 
     finetuning_model = relationship(
         "FinetuningModel", back_populates="training_sessions"
@@ -30,6 +28,7 @@ class TrainingSession(Base):
     training_parameter = relationship(
         "TrainingParameter", uselist=False, backref="training_session"
     )
+    tests = relationship("Test", uselist=False, back_populates="training_session")
 
     @property
     def fm_name(self):
