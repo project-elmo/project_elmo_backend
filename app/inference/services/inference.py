@@ -100,13 +100,11 @@ class InferenceService:
         response: TestResponseSchema,
     ) -> List[MessageResponseSchema]:
         try:
-            test_no = await self.get_test_no_by_session_no(test_request.session_no)
-
             # Create message for prompt
             prompt = Message(
-                msg=test_request.prompt,
+                msg=test_request.msg,
                 is_user=1,
-                test_no=test_no,
+                test_no=test_request.test_no,
             )
             session.add(prompt)
 
@@ -114,7 +112,7 @@ class InferenceService:
             response = Message(
                 msg=response,
                 is_user=0,
-                test_no=test_no,
+                test_no=test_request.test_no,
             )
             session.add(response)
 
