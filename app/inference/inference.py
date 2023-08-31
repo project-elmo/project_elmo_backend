@@ -59,7 +59,7 @@ def generate_answer(
 
     generated_answer = tokenizer.decode(output[0], skip_special_tokens=True)
     logger.info(generated_answer)
-    
+
     answer = generated_answer.replace(input_text, "").strip()
     logger.info(answer)
     return answer
@@ -82,8 +82,8 @@ def generate_text(
 
 
 async def execute_inference(request_schema: MessageRequestSchema) -> str:
-    session_model: TrainingSession = await InferenceService().get_session_by_session_no(
-        request_schema.session_no
+    session_model: TrainingSession = await InferenceService().get_session_by_test_no(
+        request_schema.test_no
     )
     model_path = get_model_file_path(
         session_model.pm_name, session_model.fm_name, session_model.uuid
@@ -91,7 +91,7 @@ async def execute_inference(request_schema: MessageRequestSchema) -> str:
     tokenizer = initialize_tokenizer(session_model.pm_name)
     model = initialize_model(model_path)
     logger.info(f"model_path:{model_path}, model:{model.config}")
-    prompt = request_schema.prompt
+    prompt = request_schema.msg
 
     response = ""
     if request_schema.task == 0:

@@ -15,6 +15,20 @@ from core.db import session
 
 
 class InferenceService:
+    async def get_session_by_test_no(self, test_no: int) -> TrainingSession:
+        query = (
+            select(TrainingSession)
+            .join(Test, Test.session_no == TrainingSession.session_no)
+            .options(
+                joinedload(TrainingSession.finetuning_model).joinedload(
+                    FinetuningModel.pretrained_model
+                )
+            )
+            .filter(Test.test_no == test_no)
+        )
+        result = await session.execute(query)
+        return result.scalar()
+
     async def get_session_by_session_no(self, session_no: int) -> TrainingSession:
         query = (
             select(TrainingSession)
