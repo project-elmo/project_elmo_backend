@@ -42,20 +42,25 @@ def get_answer_with_context(
 
 
 def generate_answer(
-    question: str, model: PreTrainedModel, tokenizer: PreTrainedTokenizer
+    question: str,
+    model: PreTrainedModel,
+    tokenizer: PreTrainedTokenizer,
+    max_length: int,
 ) -> str:
     input_text = question
     input_ids = tokenizer.encode(input_text, return_tensors="pt")
 
     output = model.generate(
         input_ids,
-        max_length=512,
+        max_length=max_length,
         num_return_sequences=1,
         pad_token_id=tokenizer.eos_token_id,
     )
 
     generated_answer = tokenizer.decode(output[0], skip_special_tokens=True)
-    return generated_answer.replace(input_text, "").strip()
+    answer = generated_answer.replace(input_text, "").strip()
+    logger.info(answer)
+    return answer
 
 
 def generate_text(
