@@ -25,7 +25,7 @@ test_router = APIRouter()
 )
 async def create_test(session_no: int):
     """
-    Create a test by session_no
+    Create a test by session number if it does not exist; otherwise, return the existing test.
     """
     test = await InferenceService().create_test(session_no)
     return test

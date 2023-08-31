@@ -6,13 +6,7 @@ from app.inference.models.message import Message
 from app.inference.models.test import Test
 from app.inference.schemas.inference import MessageRequestSchema, TestResponseSchema
 
-from app.training.models.pretrained_model import PretrainedModel
-from app.training.schemas.training import (
-    FinetuningRequestSchema,
-    TrainingSessionRequestSchema,
-)
-from app.training.models import FinetuningModel, TrainingSession, TrainingParameter
-
+from app.training.models import FinetuningModel, TrainingSession
 from core.db import session
 
 
@@ -48,10 +42,19 @@ class InferenceService:
         self,
         session_no: int,
     ) -> Test:
+        """
+        Create a test by session number if it does not exist; otherwise, return the existing test
+        """
         try:
             fm_no = await self.get_fm_no_by_session_no(session_no)
 
-            # Create the training session
+            query = select(Test).filter_by(session_no=session_no, fm_no=fm_no)
+            result = await session.execute(query)
+            existing_test = result.scalars().first()
+
+            if existing_test:
+                return existing_test
+
             test = Test(
                 session_no=session_no,
                 fm_no=fm_no,
@@ -86,7 +89,7 @@ class InferenceService:
 
             # Create message for response
             response = Message(
-                msg=response.response,
+                msg=response,
                 is_user=0,
                 test_no=test_no,
             )
