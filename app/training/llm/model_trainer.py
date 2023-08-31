@@ -20,6 +20,10 @@ from transformers import (
 
 from datasets import load_dataset, Dataset
 from app.training.download.progress import set_result
+from app.training.llm.model_util import (
+    get_model_file_path,
+    initialize_model_and_tokenizer,
+)
 from app.training.llm.std_writer import CustomStdErrWriter
 from app.training.models import FinetuningModel, TrainingSession
 
@@ -33,49 +37,63 @@ from core.utils.file_util import *
 from core.config import config
 
 
-async def train_model(training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema], initial_training: bool) -> Union[FinetuningModel, TrainingSession] :
+async def train_model(
+    training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema],
+    initial_training: bool,
+) -> Union[FinetuningModel, TrainingSession]:
     # Check if CUDA is available
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    model_name = training_param.pm_name
-    # home/elmo/result/model_name/fm_name
-    fm_name_path = os.path.join(config.RESULT_DIR, model_name, training_param.fm_name)
+    pm_name = training_param.pm_name
+    fm_name = training_param.fm_name
 
     # Load the pre-trained model and tokenizer
-    model, tokenizer = initialize_model_and_tokenizer(model_name)
+    model, tokenizer = initialize_model_and_tokenizer(pm_name)
 
     # Load the dataset
-    tokenized_datasets = await load_and_tokenize_dataset(training_param.dataset, tokenizer, training_param.task)
-    
+    tokenized_datasets = await load_and_tokenize_dataset(
+        training_param.dataset, tokenizer, training_param.task
+    )
+
     # Set Trainer
     training_args = get_training_args(training_param)
-    trainer: Trainer = setup_training(model, training_args, tokenized_datasets, training_param)
+    trainer: Trainer = setup_training(
+        model, training_args, tokenized_datasets, training_param
+    )
 
     # Start training
     start_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-    logger.info(f"Training started for {model_name} at {start_time}")
+    logger.info(f"Training started for {pm_name} at {start_time}")
 
     # Send the progress via socket
-    result = await send_progress(start_training, trainer, training_param, initial_training, fm_name_path)
+    result = await send_progress(
+        start_training, trainer, training_param, initial_training
+    )
 
     end_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
-    training_param.ts_model_name = training_param.ts_model_name or get_model_name(training_param, result, initial_training)
+    training_param.ts_model_name = training_param.ts_model_name or get_model_name(
+        training_param, result, initial_training
+    )
     uuid = get_uuid()
-    ts_path = os.path.join(fm_name_path, uuid)
-    logger.info(f"Training completed for {model_name} at {end_time}, result: {result}, ts_path: {ts_path}")
+    # home/.cache/hugginggace/elmo/result/{model_name}/{fm_name}/{uuid}
+    save_path = get_model_file_path(pm_name, fm_name, uuid)
+    logger.info(
+        f"Training completed for {pm_name} at {end_time}, result: {result}, ts_path: {save_path}"
+    )
 
     # Save Model
-    trainer.save_model(ts_path)
-
+    trainer.save_model(save_path)
 
     # Insert into DB
     if initial_training:
-        finetuning_model: FinetuningModel = await TrainingService().create_finetuning_model(
-            training_param=training_param,
-            start_time=start_time,
-            end_time=end_time,
-            uuid=uuid
+        finetuning_model: FinetuningModel = (
+            await TrainingService().create_finetuning_model(
+                training_param=training_param,
+                start_time=start_time,
+                end_time=end_time,
+                uuid=uuid,
+            )
         )
 
         return finetuning_model
@@ -87,10 +105,11 @@ async def train_model(training_param: Union[FinetuningRequestSchema, TrainingSes
             training_param=training_param,
             start_time=start_time,
             end_time=end_time,
-            uuid=uuid
+            uuid=uuid,
         )
 
         return session
+
 
 def tokenize_qa(tokenizer: PreTrainedTokenizer):
     def _tokenize(batch):
@@ -110,7 +129,10 @@ def tokenize_qa(tokenizer: PreTrainedTokenizer):
 
     return _tokenize
 
-async def send_progress(func: Callable[..., NamedTuple], *args: Any, **kwargs: Dict[str, Any]) -> NamedTuple:
+
+async def send_progress(
+    func: Callable[..., NamedTuple], *args: Any, **kwargs: Dict[str, Any]
+) -> NamedTuple:
     """
     Sends progress metrics of a given function using a socket.
     """
@@ -119,38 +141,27 @@ async def send_progress(func: Callable[..., NamedTuple], *args: Any, **kwargs: D
 
     # Send the progress via socket
     std_writer = CustomStdErrWriter(model_name)
-    
+
     try:
         result = await func(*args)
 
-        result_msg = {
-            "task": "task_result",
-            "model_name": model_name
-        }
+        result_msg = {"task": "task_result", "model_name": model_name}
 
         metrics: Dict[str, Union[str, float, int]] = result[2]
         result_msg.update(metrics)
-        metrics_json = json.dumps(result_msg)  
+        metrics_json = json.dumps(result_msg)
 
         logger.info(f"metrics_json: {metrics_json}")
         set_result(model_name, metrics_json)
-        
+
     finally:
         # Restore stderr
         std_writer.close()
 
     return result
 
-def initialize_model_and_tokenizer(model_name: str) -> Tuple:
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    if model_name == "gpt2":
-        tokenizer.pad_token = tokenizer.eos_token
-        model = GPT2LMHeadModel.from_pretrained(model_name, local_files_only=True)
-    else:
-        model = AutoModel.from_pretrained(model_name, local_files_only=True)
-    return model, tokenizer
 
-async def load_and_tokenize_dataset(dataset_path: str, tokenizer, task:int) -> Dataset:
+async def load_and_tokenize_dataset(dataset_path: str, tokenizer, task: int) -> Dataset:
     """
     Loads the dataset from the given path and tokenizes it.
 
@@ -164,11 +175,14 @@ async def load_and_tokenize_dataset(dataset_path: str, tokenizer, task:int) -> D
     """
     loaders = {"json": "json", "csv": "csv"}
     extension = get_extension_from_path(dataset_path)
-    dataset = load_dataset(loaders.get(extension, "default_value"), data_files=dataset_path)
+    dataset = load_dataset(
+        loaders.get(extension, "default_value"), data_files=dataset_path
+    )
 
     if task == 0:
         return dataset.map(tokenize_qa(tokenizer), batched=True)
     return dataset.map(tokenize_qa(tokenizer), batched=True)
+
 
 def get_training_args(training_param: FinetuningRequestSchema) -> TrainingArguments:
     common_args = {
@@ -181,7 +195,7 @@ def get_training_args(training_param: FinetuningRequestSchema) -> TrainingArgume
         "logging_strategy": training_param.logging_strategy,
         "logging_steps": training_param.save_steps,
         "eval_steps": training_param.eval_steps,
-        "save_strategy": training_param.save_strategy
+        "save_strategy": training_param.save_strategy,
     }
 
     if training_param.save_total_limits != -1:
@@ -189,7 +203,13 @@ def get_training_args(training_param: FinetuningRequestSchema) -> TrainingArgume
 
     return TrainingArguments(**common_args)
 
-def setup_training(model: PreTrainedModel, training_args: TrainingArguments, tokenized_datasets: Dataset, training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema]) -> Trainer:
+
+def setup_training(
+    model: PreTrainedModel,
+    training_args: TrainingArguments,
+    tokenized_datasets: Dataset,
+    training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema],
+) -> Trainer:
     trainer = Trainer(
         model=model,
         args=training_args,
@@ -199,27 +219,43 @@ def setup_training(model: PreTrainedModel, training_args: TrainingArguments, tok
 
     return trainer
 
-async def start_training(trainer: Trainer, training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema], initial_training: bool, fm_name_path:str) -> NamedTuple:
+
+async def start_training(
+    trainer: Trainer,
+    training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema],
+    initial_training: bool,
+) -> NamedTuple:
     if initial_training:
         result: NamedTuple = trainer.train()
     else:
-        uuid = await TrainingService().get_uuid_by_session_no(training_param.parent_session_no)
-        resume_from_checkpoint = os.path.join(fm_name_path, uuid)
+        uuid = await TrainingService().get_uuid_by_session_no(
+            training_param.parent_session_no
+        )
+        resume_from_checkpoint = get_model_file_path(
+            training_param.pm_name, training_param.fm_name, uuid
+        )
         result: NamedTuple = trainer.train(os.path.join(resume_from_checkpoint))
     return result
 
-def get_model_name(training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema], result: NamedTuple, initial_training: bool) -> str:
+
+def get_model_name(
+    training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema],
+    result: NamedTuple,
+    initial_training: bool,
+) -> str:
     loss = result[1]
     base_name = f"{training_param.fm_name}_epoch_{training_param.epochs}_loss_{loss}"
-    
+
     if initial_training:
         return f"{base_name}_0"
     else:
         return f"{base_name}_{training_param.parent_session_no}"
 
+
 def get_uuid():
     uuid_full = uuid.uuid4()
-    return str(uuid_full).split('-')[0] + '-' + str(uuid_full).split('-')[1]
+    return str(uuid_full).split("-")[0] + "-" + str(uuid_full).split("-")[1]
+
 
 class HealthCheckCallback(TrainerCallback):
     def __init__(self, repo_id):
