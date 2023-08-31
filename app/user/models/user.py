@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 
 
 class User(Base, TimestampMixin):
-    __tablename__ = "users"
+    __tablename__ = "user"
 
     user_no = Column(Integer, primary_key=True, autoincrement=True)
     id = Column(String(50), nullable=False)

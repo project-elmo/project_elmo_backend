@@ -9,7 +9,7 @@ class FinetuningModel(Base):
     fm_no = Column(
         Integer, primary_key=True, autoincrement=True, comment="AUTO_INCREMENT"
     )
-    user_no = Column(Integer, ForeignKey("users.user_no"), nullable=False)
+    user_no = Column(Integer, ForeignKey("user.user_no"), nullable=False)
     pm_no = Column(Integer, ForeignKey("pretrained_model.pm_no"), nullable=False)
     fm_name = Column(String(50), nullable=False, comment="파인튜닝 모델의 이름")
     fm_description = Column(
@@ -24,7 +24,9 @@ class FinetuningModel(Base):
     training_sessions = relationship(
         "TrainingSession", back_populates="finetuning_model"
     )
-    pretrained_model = relationship("PretrainedModel", back_populates="finetuning_models")
+    pretrained_model = relationship(
+        "PretrainedModel", back_populates="finetuning_models"
+    )
 
     @property
     def pm_name(self):
