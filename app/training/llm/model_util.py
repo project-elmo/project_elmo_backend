@@ -3,7 +3,7 @@ from typing import Tuple
 from transformers import (
     GPT2LMHeadModel,
     AutoTokenizer,
-    AutoModel,
+    AutoModelForCausalLM,
     Trainer,
     TrainingArguments,
     PreTrainedModel,
@@ -21,7 +21,9 @@ def initialize_model(model_name_or_path: str) -> PreTrainedModel:
             model_name_or_path, local_files_only=True
         )
     else:
-        model = AutoModel.from_pretrained(model_name_or_path, local_files_only=True)
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name_or_path, local_files_only=True
+        )
     return model
 
 
