@@ -97,8 +97,8 @@ class InferenceService:
     async def create_messages(
         self,
         test_request: MessageRequestSchema,
-        response: TestResponseSchema,
-    ) -> List[MessageResponseSchema]:
+        response: MessageResponseSchema,
+    ) -> List[Message]:
         try:
             # Create message for prompt
             prompt = Message(

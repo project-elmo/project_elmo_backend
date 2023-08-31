@@ -43,20 +43,20 @@ async def create_test(session_no: int):
 
 @test_router.post(
     "/create_message",
-    response_model=MessageResponseSchema,
+    response_model=List[MessageResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
 )
-async def get_test_resposne(test_request: MessageRequestSchema):
+async def get_msg_resposne(msg_request: MessageRequestSchema):
     """
     Create message by user's input
 
     Returns:
         MessageResponseSchema: The result of the infrence.
     """
-    response = await execute_inference(test_request)
-    await InferenceService().create_messages(test_request, response)
+    response = await execute_inference(msg_request)
+    results = await InferenceService().create_messages(msg_request, response)
 
-    return MessageResponseSchema(msg=response)
+    return results
 
 
 @test_router.get(
