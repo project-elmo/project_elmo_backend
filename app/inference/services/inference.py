@@ -49,7 +49,7 @@ class InferenceService:
         session_no: int,
     ) -> Test:
         try:
-            fm_no = await self.get_fm_no_by_session_no(self, session_no)
+            fm_no = await self.get_fm_no_by_session_no(session_no)
 
             # Create the training session
             test = Test(
@@ -74,9 +74,7 @@ class InferenceService:
         response: TestResponseSchema,
     ) -> None:
         try:
-            test_no = await self.get_test_no_by_session_no(
-                self, test_request.session_no
-            )
+            test_no = await self.get_test_no_by_session_no(test_request.session_no)
 
             # Create message for prompt
             prompt = Message(
