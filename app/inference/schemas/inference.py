@@ -17,7 +17,11 @@ class MessageRequestSchema(BaseModel):
 
 
 class MessageResponseSchema(BaseModel):
+    msg_no: int
     msg: str
+    created_at: str
+    is_user: int
+    test_no: int
 
     class Config:
         from_attributes = True
