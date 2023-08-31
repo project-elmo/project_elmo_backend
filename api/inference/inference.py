@@ -27,7 +27,7 @@ async def create_test(session_no: int):
     """
     Create a test by session_no
     """
-    test = InferenceService().create_test(session_no)
+    test = await InferenceService().create_test(session_no)
     return test
 
 
@@ -44,7 +44,7 @@ async def get_test_resposne(test_request: MessageRequestSchema):
         MessageResponseSchema: The result of the infrence.
     """
     response = await execute_inference(test_request)
-    InferenceService().create_messages(test_request, response)
+    await InferenceService().create_messages(test_request, response)
 
     return MessageResponseSchema(response=response)
 
@@ -55,5 +55,5 @@ async def get_test_resposne(test_request: MessageRequestSchema):
     responses={"400": {"model": ExceptionResponseSchema}},
 )
 async def get_chat_history(test_no: int):
-    response = InferenceService().get_chat_history(test_no)
+    response = await InferenceService().get_chat_history(test_no)
     return response
