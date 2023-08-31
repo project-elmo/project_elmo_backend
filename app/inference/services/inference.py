@@ -36,6 +36,11 @@ class InferenceService:
         record = result.scalar()
         return record
 
+    async def get_all_test(self) -> List[Test]:
+        query = select(Test).options(joinedload(Test.training_session))
+        result = await session.execute(query)
+        return result.scalars().all()
+
     async def get_test_no_by_session_no(self, session_no: int) -> int:
         query = select(Test.test_no).where(Test.session_no == session_no)
         result = await session.execute(query)
@@ -109,11 +114,6 @@ class InferenceService:
             await session.rollback()
             logger.error(f"Error while inserting: {e}")
             raise e
-
-    async def get_all_test(self) -> List[Test]:
-        query = select(Test).options(joinedload(Test.training_session))
-        result = await session.execute(query)
-        return result.scalars().all()
 
     async def get_chat_history(self, test_no) -> List[Message]:
         query = (

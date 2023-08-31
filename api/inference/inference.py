@@ -18,6 +18,16 @@ from app.user.schemas import ExceptionResponseSchema
 test_router = APIRouter()
 
 
+@test_router.get(
+    "/tests",
+    response_model=List[TestResponseSchema],
+    responses={"400": {"model": ExceptionResponseSchema}},
+)
+async def get_all_test():
+    tests = await InferenceService().get_all_test()
+    return tests
+
+
 @test_router.post(
     "/create_test",
     response_model=TestResponseSchema,
