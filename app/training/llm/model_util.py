@@ -31,6 +31,7 @@ def initialize_model(model_name_or_path: str) -> PreTrainedModel:
 def initialize_tokenizer(model_name: str) -> PreTrainedTokenizer:
     if model_name == "gpt2":
         tokenizer = GPT2Tokenizer.from_pretrained(model_name)
+        tokenizer.pad_token = tokenizer.eos_token
     else:
         tokenizer = AutoModelForCausalLM.from_pretrained(model_name)
     return tokenizer

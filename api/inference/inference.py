@@ -19,8 +19,5 @@ test_router = APIRouter()
 )
 async def get_test_resposne(test_request: TestRequestSchema):
     response = await execute_inference(test_request)
-
-    if response:
-        return TestResponseSchema(response=response)
-    else:
-        return {"404": {"model": ExceptionResponseSchema}}
+    
+    return TestResponseSchema(response=response)

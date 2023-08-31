@@ -49,8 +49,8 @@ async def train_model(
     fm_name = training_param.fm_name
 
     # Load the pre-trained model and tokenizer
-    model = initialize_model(pm_name)
     tokenizer = initialize_tokenizer(pm_name)
+    model = initialize_model(pm_name)
 
     # Load the dataset
     tokenized_datasets = await load_and_tokenize_dataset(
