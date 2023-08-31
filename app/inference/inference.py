@@ -15,7 +15,8 @@ from app.inference.schemas.inference import TestRequestSchema
 from app.inference.services.inference import InferenceService
 from app.training.llm.model_util import (
     get_model_file_path,
-    initialize_model_and_tokenizer,
+    initialize_model,
+    initialize_tokenizer,
 )
 from app.training.models.training_session import TrainingSession
 
@@ -80,7 +81,8 @@ async def execute_inference(request_schema: TestRequestSchema) -> str:
     model_path = get_model_file_path(
         session_model.pm_name, session_model.fm_name, session_model.uuid
     )
-    model, tokenizer = initialize_model_and_tokenizer(model_path)
+    model = initialize_model(model_path)
+    tokenizer = initialize_tokenizer(session_model.pm_name)
     prompt = request_schema.prompt
 
     response = ""

@@ -22,7 +22,8 @@ from datasets import load_dataset, Dataset
 from app.training.download.progress import set_result
 from app.training.llm.model_util import (
     get_model_file_path,
-    initialize_model_and_tokenizer,
+    initialize_model,
+    initialize_tokenizer,
 )
 from app.training.llm.std_writer import CustomStdErrWriter
 from app.training.models import FinetuningModel, TrainingSession
@@ -48,7 +49,8 @@ async def train_model(
     fm_name = training_param.fm_name
 
     # Load the pre-trained model and tokenizer
-    model, tokenizer = initialize_model_and_tokenizer(pm_name)
+    model = initialize_model(pm_name)
+    tokenizer = initialize_tokenizer(pm_name)
 
     # Load the dataset
     tokenized_datasets = await load_and_tokenize_dataset(

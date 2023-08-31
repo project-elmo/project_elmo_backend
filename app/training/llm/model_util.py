@@ -15,16 +15,21 @@ from transformers import (
 from core.config import config
 
 
-def initialize_model_and_tokenizer(model_name_or_path: str) -> Tuple:
-    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+def initialize_model(model_name_or_path: str) -> PreTrainedModel:
     if model_name_or_path == "gpt2":
-        tokenizer.pad_token = tokenizer.eos_token
         model = GPT2LMHeadModel.from_pretrained(
             model_name_or_path, local_files_only=True
         )
     else:
         model = AutoModel.from_pretrained(model_name_or_path, local_files_only=True)
-    return model, tokenizer
+    return model
+
+
+def initialize_tokenizer(model_name: str) -> PreTrainedTokenizer:
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    if model_name == "gpt2":
+        tokenizer.pad_token = tokenizer.eos_token
+    return tokenizer
 
 
 def get_model_file_path(pm_name: str, fm_name: str, uuid: str) -> str:
