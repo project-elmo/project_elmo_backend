@@ -9,7 +9,7 @@ from app.history.schemas.history import (
 from app.inference.inference import execute_inference
 from app.inference.schemas.inference import (
     ChatRequestSchema,
-    ChatResponseSchema,
+    MessageResponseSchema,
     MessageRequestSchema,
     TestResponseSchema,
 )
@@ -25,27 +25,36 @@ test_router = APIRouter()
     responses={"400": {"model": ExceptionResponseSchema}},
 )
 async def create_test(session_no: int):
+    """
+    Create a test by session_no
+    """
     test = InferenceService().create_test(session_no)
     return test
 
 
 @test_router.post(
     "/create_message",
-    response_model=ChatResponseSchema,
+    response_model=MessageResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
 )
 async def get_test_resposne(test_request: MessageRequestSchema):
+    """
+    Create message by user's input
+
+    Returns:
+        MessageResponseSchema: The result of the infrence.
+    """
     response = await execute_inference(test_request)
     InferenceService().create_messages(test_request, response)
 
-    return ChatResponseSchema(response=response)
+    return MessageResponseSchema(response=response)
 
 
 @test_router.get(
     "/chat_history",
-    response_model=List[ChatResponseSchema],
+    response_model=List[MessageResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
 )
-async def get_chat_history(chat_request: ChatRequestSchema):
-    response = InferenceService().get_chat_history(chat_request.test_no)
+async def get_chat_history(test_no: int):
+    response = InferenceService().get_chat_history(test_no)
     return response
