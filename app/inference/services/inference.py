@@ -4,7 +4,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from app.inference.models.message import Message
 from app.inference.models.test import Test
-from app.inference.schemas.inference import MessageRequestSchema, TestResponseSchema
+from app.inference.schemas.inference import (
+    MessageRequestSchema,
+    MessageResponseSchema,
+    TestResponseSchema,
+)
 
 from app.training.models import FinetuningModel, TrainingSession
 from core.db import session
@@ -75,7 +79,7 @@ class InferenceService:
         self,
         test_request: MessageRequestSchema,
         response: TestResponseSchema,
-    ) -> None:
+    ) -> List[MessageResponseSchema]:
         try:
             test_no = await self.get_test_no_by_session_no(test_request.session_no)
 
@@ -96,6 +100,10 @@ class InferenceService:
             session.add(response)
 
             await session.commit()
+            await session.refresh(prompt)
+            await session.refresh(response)
+
+            return [prompt, response]
 
         except Exception as e:
             await session.rollback()

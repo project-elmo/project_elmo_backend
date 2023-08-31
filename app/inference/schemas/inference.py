@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+import datetime
 
 
 class TestResponseSchema(BaseModel):
@@ -19,7 +20,7 @@ class MessageRequestSchema(BaseModel):
 class MessageResponseSchema(BaseModel):
     msg_no: int
     msg: str
-    created_at: str
+    created_at: datetime.datetime
     is_user: int
     test_no: int
 
