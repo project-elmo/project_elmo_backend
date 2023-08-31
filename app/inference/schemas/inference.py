@@ -17,7 +17,7 @@ class MessageRequestSchema(BaseModel):
 
 
 class MessageResponseSchema(BaseModel):
-    response: str
+    msg: str
 
     class Config:
         from_attributes = True

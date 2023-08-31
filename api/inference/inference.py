@@ -46,7 +46,7 @@ async def get_test_resposne(test_request: MessageRequestSchema):
     response = await execute_inference(test_request)
     await InferenceService().create_messages(test_request, response)
 
-    return MessageResponseSchema(response=response)
+    return MessageResponseSchema(msg=response)
 
 
 @test_router.get(
