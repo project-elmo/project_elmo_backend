@@ -9,6 +9,7 @@ from api import router
 from api.home.home import home_router
 from api.training.training import training_router
 from api.history.history import history_router
+from api.inference.inference import test_router
 from core.config import config
 from core.exceptions import CustomException
 from core.fastapi.dependencies import Logging
@@ -26,6 +27,7 @@ def init_routers(app_: FastAPI) -> None:
     app_.include_router(router)
     app_.include_router(training_router, prefix="/api/training", tags=["Training"])
     app_.include_router(history_router, prefix="/api/history", tags=["History"])
+    app_.include_router(test_router, prefix="/api/test", tags=["Test"])
 
 
 def init_listeners(app_: FastAPI) -> None:
