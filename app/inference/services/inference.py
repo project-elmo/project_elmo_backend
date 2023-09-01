@@ -7,7 +7,6 @@ from app.inference.models.test import Test
 from app.inference.schemas.inference import (
     MessageRequestSchema,
     MessageResponseSchema,
-    TestResponseSchema,
 )
 
 from app.training.models import FinetuningModel, TrainingSession
@@ -42,16 +41,28 @@ class InferenceService:
         result = await session.execute(query)
         return result.scalar()
 
-    async def get_fm_no_by_session_no(self, session_no: int) -> int:
-        query = select(TrainingSession.fm_no).where(
-            TrainingSession.session_no == session_no
-        )
+    async def get_fm_by_session_no(self, session_no: int) -> int:
+        query = select(TrainingSession).where(TrainingSession.session_no == session_no)
         result = await session.execute(query)
         record = result.scalar()
         return record
 
+    async def get_all_fm_with_test(self) -> List[FinetuningModel]:
+        query = select(FinetuningModel).options(
+            joinedload(FinetuningModel.pretrained_model),
+            joinedload(FinetuningModel.training_sessions).joinedload(
+                TrainingSession.tests
+            ),
+        )
+        result = await session.execute(query)
+        return result.scalars().unique().all()
+
     async def get_all_test(self) -> List[Test]:
-        query = select(Test).options(joinedload(Test.training_session))
+        query = select(Test).options(
+            joinedload(Test.training_session).joinedload(
+                TrainingSession.finetuning_model
+            )
+        )
         result = await session.execute(query)
         return result.scalars().all()
 
@@ -69,9 +80,9 @@ class InferenceService:
         Create a test by session number if it does not exist; otherwise, return the existing test
         """
         try:
-            fm_no = await self.get_fm_no_by_session_no(session_no)
+            fm: FinetuningModel = await self.get_fm_by_session_no(session_no)
 
-            query = select(Test).filter_by(session_no=session_no, fm_no=fm_no)
+            query = select(Test).filter_by(session_no=session_no, fm_no=fm.fm_no)
             result = await session.execute(query)
             existing_test = result.scalars().first()
 
@@ -80,14 +91,24 @@ class InferenceService:
 
             test = Test(
                 session_no=session_no,
-                fm_no=fm_no,
+                fm_no=fm.fm_no,
             )
 
             session.add(test)
             await session.commit()
             await session.refresh(test)
 
-            return test
+            query = (
+                select(Test)
+                .options(
+                    joinedload(Test.training_session).joinedload(
+                        TrainingSession.finetuning_model
+                    )
+                )
+                .filter(Test.test_no == test.test_no)
+            )
+            result = await session.execute(query)
+            return result.scalar()
 
         except Exception as e:
             await session.rollback()

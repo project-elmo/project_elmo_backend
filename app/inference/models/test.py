@@ -24,3 +24,11 @@ class Test(Base):
         "TrainingSession", uselist=False, back_populates="tests"
     )
     messages = relationship("Message", back_populates="test")
+
+    @property
+    def fm_name(self):
+        return self.training_session.fm_name
+
+    @property
+    def ts_model_name(self):
+        return self.training_session.ts_name
