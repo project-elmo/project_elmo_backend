@@ -77,7 +77,7 @@ def create_app() -> FastAPI:
     app_ = FastAPI(
         title="Project ELMO",
         description="ELMO API",
-        version="1.0.5",
+        version="1.0.8",
         docs_url=None if config.ENV == "production" else "/docs",
         redoc_url=None if config.ENV == "production" else "/redoc",
         dependencies=[Depends(Logging)],

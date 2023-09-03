@@ -4,17 +4,23 @@ from typing import List
 
 
 class FinetuningModelResponseSchema(BaseModel):
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
     fm_no: int = 5
     fm_name: str
     user_no: int
     pm_no: int
     pm_name: str
     fm_description: str
-    
-    class Config:
-        from_attributes = True
+
 
 class TrainingSessionResponseSchema(BaseModel):
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
     session_no: str = "3"
     fm_no: int
     fm_name: str
@@ -25,12 +31,12 @@ class TrainingSessionResponseSchema(BaseModel):
     end_time: datetime
     ts_model_name: str
 
-    class Config:
-        from_attributes = True
-
-
 
 class TrainingParameterResponseSchema(BaseModel):
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
     parameter_no: int = 1
     session_no: int = 3
     fm_no: int = 5
@@ -48,6 +54,3 @@ class TrainingParameterResponseSchema(BaseModel):
     run_on_gpu: bool
     load_best_at_the_end: bool
     dataset: str
-
-    class Config:
-        from_attributes = True

@@ -22,3 +22,9 @@ class Message(Base):
     )
 
     test = relationship("Test", back_populates="messages")
+
+    def __getattribute__(self, name):
+        value = super().__getattribute__(name)
+        if name == "is_user":
+            return bool(value)
+        return value
