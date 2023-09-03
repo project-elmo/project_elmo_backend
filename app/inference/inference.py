@@ -19,6 +19,7 @@ from app.training.llm.model_util import (
     initialize_tokenizer,
 )
 from app.training.models.training_session import TrainingSession
+from app.setting.services.setting import SettingService
 
 
 def get_answer_with_context(
@@ -90,6 +91,10 @@ async def execute_inference(request_schema: MessageRequestSchema) -> str:
     )
     tokenizer = initialize_tokenizer(session_model.pm_name)
     model = initialize_model(model_path)
+
+    if SettingService().get_is_gpu == "true":
+        model.to("cuda:0")
+
     logger.info(f"model_path:{model_path}, model:{model.config}")
     prompt = request_schema.msg
 

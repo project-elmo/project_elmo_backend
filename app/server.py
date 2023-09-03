@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 
 from api import router
 from api.home.home import home_router
+from api.setting.setting import setting_router
 from api.training.training import training_router
 from api.history.history import history_router
 from api.inference.inference import test_router
@@ -24,6 +25,7 @@ from core.fastapi.middlewares import (
 # ADD ROUTER HERE:
 def init_routers(app_: FastAPI) -> None:
     app_.include_router(home_router)
+    app_.include_router(setting_router, prefix="/api/setting", tags=["Setting"])
     app_.include_router(router)
     app_.include_router(training_router, prefix="/api/training", tags=["Training"])
     app_.include_router(history_router, prefix="/api/history", tags=["History"])
@@ -77,7 +79,7 @@ def create_app() -> FastAPI:
     app_ = FastAPI(
         title="Project ELMO",
         description="ELMO API",
-        version="1.0.8",
+        version="1.0.9",
         docs_url=None if config.ENV == "production" else "/docs",
         redoc_url=None if config.ENV == "production" else "/redoc",
         dependencies=[Depends(Logging)],

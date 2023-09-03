@@ -19,6 +19,7 @@ from transformers import (
 )
 
 from datasets import load_dataset, Dataset
+from app.setting.services.setting import SettingService
 from app.training.download.progress import set_result
 from app.training.llm.model_util import (
     get_model_file_path,
@@ -163,6 +164,12 @@ async def send_progress(
     return result
 
 
+def get_setting_device() -> str:
+    is_gpu = SettingService().get_is_gpu()
+
+    return is_gpu
+
+
 async def load_and_tokenize_dataset(dataset_path: str, tokenizer, task: int) -> Dataset:
     """
     Loads the dataset from the given path and tokenizes it.
@@ -198,6 +205,7 @@ def get_training_args(training_param: FinetuningRequestSchema) -> TrainingArgume
         "logging_steps": training_param.save_steps,
         "eval_steps": training_param.eval_steps,
         "save_strategy": training_param.save_strategy,
+        "use_cpu": True if get_setting_device() == "false" else False,
     }
 
     if training_param.save_total_limits != -1:
