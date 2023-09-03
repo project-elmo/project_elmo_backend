@@ -1,16 +1,11 @@
 import os
-from typing import Tuple
 from transformers import (
     GPT2LMHeadModel,
     GPT2Tokenizer,
     AutoTokenizer,
     AutoModelForCausalLM,
-    Trainer,
-    TrainingArguments,
     PreTrainedModel,
     PreTrainedTokenizer,
-    TrainerCallback,
-    TrainerControl,
 )
 
 from core.config import config
