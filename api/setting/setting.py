@@ -5,18 +5,8 @@ from app.setting.services.setting import SettingService
 from app.user.schemas import (
     ExceptionResponseSchema,
 )
-import torch
 
 setting_router = APIRouter()
-
-
-@setting_router.get(
-    "/is_gpu_available",
-    responses={"400": {"model": ExceptionResponseSchema}},
-)
-async def check_gpu():
-    is_gpu = torch.cuda.is_available()
-    return {"is_gpu_available": is_gpu}
 
 
 @setting_router.post(

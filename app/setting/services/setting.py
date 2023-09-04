@@ -10,7 +10,7 @@ from core.db import session
 
 class SettingService:
     async def get_setting(self) -> ElmoSetting:
-        query = select(ElmoSetting).filter(ElmoSetting.set_no == 1)  # TODO: fix
+        query = select(ElmoSetting).filter(ElmoSetting.set_no == 1)
         result = await session.execute(query)
         return result.scalar()
 
@@ -28,7 +28,7 @@ class SettingService:
             elmo_setting = ElmoSetting(
                 model_path=setting.model_path,
                 result_path=setting.result_path,
-                is_gpu=setting.is_gpu,
+                is_gpu=setting.is_gpu_use,
             )
 
             session.add(elmo_setting)
@@ -50,7 +50,7 @@ class SettingService:
                 .values(
                     model_path=setting.model_path,
                     result_path=setting.result_path,
-                    is_gpu=setting.is_gpu,
+                    is_gpu=setting.is_use_gpu,
                 )
             )
             await session.execute(query)
@@ -74,8 +74,8 @@ class SettingService:
             if not setting:
                 setting = await self.create_setting()
 
-            self.set_is_gpu(str(setting.is_gpu))
-            return str(setting.is_gpu)
+            self.set_is_gpu(str(setting.is_use_gpu))
+            return str(setting.is_use_gpu)
 
     def set_is_gpu(self, is_gpu: str):
         Cache.set(IS_GPU, str(is_gpu))
