@@ -122,9 +122,3 @@ class TrainingService:
         query = select(PretrainedModel)
         result = await session.execute(query)
         return result.scalars().all()
-
-    async def get_pm_by_pm_no(self, pm_no: int) -> PretrainedModel:
-        query = select(PretrainedModel).where(PretrainedModel.pm_no == pm_no)
-        result = await session.execute(query)
-        record = result.scalar()
-        return record

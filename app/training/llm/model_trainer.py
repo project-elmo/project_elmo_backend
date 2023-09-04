@@ -44,16 +44,14 @@ async def train_model(
     initial_training: bool,
 ) -> Union[FinetuningModel, TrainingSession]:
     # Check if CUDA is available
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    pm = await TrainingService().get_pm_by_pm_no(pm_no=training_param.pm_no)
+    device = True if await get_setting_device() == "false" else False,
 
-    base_model = pm.base_model
     pm_name = training_param.pm_name
     fm_name = training_param.fm_name
 
     # Load the pre-trained model and tokenizer
-    tokenizer = initialize_tokenizer(base_model)
-    model = initialize_model(base_model)
+    tokenizer = initialize_tokenizer(pm_name)
+    model = initialize_model(pm_name)
 
     # Load the dataset
     tokenized_datasets = await load_and_tokenize_dataset(
@@ -61,7 +59,7 @@ async def train_model(
     )
 
     # Set Trainer
-    training_args = get_training_args(training_param)
+    training_args = get_training_args(training_param, device)
     trainer: Trainer = setup_training(
         model, training_args, tokenized_datasets, training_param
     )
@@ -166,8 +164,8 @@ async def send_progress(
     return result
 
 
-def get_setting_device() -> str:
-    is_gpu = SettingService().get_is_gpu()
+async def get_setting_device() -> str:
+    is_gpu = await SettingService().get_is_gpu()
 
     return is_gpu
 
@@ -195,7 +193,7 @@ async def load_and_tokenize_dataset(dataset_path: str, tokenizer, task: int) -> 
     return dataset.map(tokenize_qa(tokenizer), batched=True)
 
 
-def get_training_args(training_param: FinetuningRequestSchema) -> TrainingArguments:
+def get_training_args(training_param: FinetuningRequestSchema, device: bool) -> TrainingArguments:
     common_args = {
         "output_dir": config.RESULT_DIR,
         "num_train_epochs": training_param.epochs,
@@ -207,7 +205,7 @@ def get_training_args(training_param: FinetuningRequestSchema) -> TrainingArgume
         "logging_steps": training_param.save_steps,
         "eval_steps": training_param.eval_steps,
         "save_strategy": training_param.save_strategy,
-        "use_cpu": True if get_setting_device() == "false" else False,
+        "use_cpu": not device,
     }
 
     if training_param.save_total_limits != -1:

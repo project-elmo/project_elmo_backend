@@ -6,13 +6,14 @@ from transformers import (
     AutoModelForCausalLM,
     PreTrainedModel,
     PreTrainedTokenizer,
+    PreTrainedTokenizerFast,
 )
-
+from loguru import logger
 from core.config import config
 
 
 def initialize_model(model_name_or_path: str) -> PreTrainedModel:
-    if "gpt2" in model_name_or_path.lower():
+    if "gpt2" == model_name_or_path.lower():
         model = GPT2LMHeadModel.from_pretrained(
             model_name_or_path, local_files_only=True
         )
@@ -24,11 +25,16 @@ def initialize_model(model_name_or_path: str) -> PreTrainedModel:
 
 
 def initialize_tokenizer(model_name: str) -> PreTrainedTokenizer:
-    if "gpt2" in model_name.lower():
+    if "gpt2" == model_name.lower():
         tokenizer = GPT2Tokenizer.from_pretrained(model_name)
         tokenizer.pad_token = tokenizer.eos_token
+    elif "skt/kogpt2-base-v2" == model_name.lower():
+        tokenizer = PreTrainedTokenizerFast.from_pretrained("skt/kogpt2-base-v2",
+            bos_token='</s>', eos_token='</s>', unk_token='<unk>',
+            pad_token='<pad>', mask_token='<mask>')
     else:
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
+       tokenizer = AutoTokenizer.from_pretrained(model_name)
+
     return tokenizer
 
 
