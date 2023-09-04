@@ -31,4 +31,4 @@ class Test(Base):
 
     @property
     def ts_model_name(self):
-        return self.training_session.ts_name
+        return self.training_session.ts_model_name

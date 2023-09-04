@@ -33,7 +33,6 @@ async def get_all_test():
     response_data = []
 
     for fm in fm_models:
-        logger.info(fm)
         sessions = []
         tests = []
 

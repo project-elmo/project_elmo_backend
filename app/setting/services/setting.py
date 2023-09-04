@@ -69,7 +69,7 @@ class SettingService:
         if is_gpu:
             return is_gpu
         else:
-            setting: ElmoSetting = self.get_setting()
+            setting: ElmoSetting = await self.get_setting()
 
             if not setting:
                 setting = await self.create_setting()
