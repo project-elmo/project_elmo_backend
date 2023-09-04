@@ -97,7 +97,7 @@ async def get_msg_resposne(msg_request: MessageRequestSchema):
     Create message by user's input
 
     Returns:
-        MessageResponseSchema: The result of the infrence.
+        MessageResponseSchema: The result of the inference.
     """
     response = await execute_inference(msg_request)
     results = await InferenceService().create_messages(msg_request, response)
