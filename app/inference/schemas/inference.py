@@ -29,6 +29,11 @@ class MessageRequestSchema(BaseModel):
     task: int = 0  # 모델의 목적:: 0 QA 1 Classification 2 Generate
     msg: str
     max_length: int = 50  # 최대 길이
+    temperature: float = 1.0
+    top_k: int = 50
+    top_p: float = 1.0
+    repetition_penalty: float = 1.0
+    no_repeat_ngram_size: int = 0
 
 
 class MessageResponseSchema(BaseModel):

@@ -46,40 +46,27 @@ def generate_answer(
     question: str,
     model: PreTrainedModel,
     tokenizer: PreTrainedTokenizer,
-    max_length: int,
+    request_schema: MessageRequestSchema,
 ) -> str:
     input_text = question
     input_ids = tokenizer.encode(input_text, return_tensors="pt")
 
     output = model.generate(
         input_ids,
-        max_length=max_length,
         num_return_sequences=1,
         pad_token_id=tokenizer.eos_token_id,
+        max_length=request_schema.max_length,
+        temperature=request_schema.temperature,
+        top_k=request_schema.top_k,
+        top_p=request_schema.top_p,
+        repetition_penalty=request_schema.repetition_penalty,
+        no_repeat_ngram_size=request_schema.no_repeat_ngram_size,
     )
 
     generated_answer = tokenizer.decode(output[0], skip_special_tokens=True)
-    logger.info(generated_answer)
-
     answer = generated_answer.replace(input_text, "").strip()
     logger.info(answer)
     return answer
-
-
-def generate_text(
-    prompt: str,
-    model: PreTrainedModel,
-    tokenizer: PreTrainedTokenizer,
-    max_length: int = 50,
-) -> str:
-    """
-    For text generation
-    """
-    input_ids = tokenizer.encode(prompt, return_tensors="pt")
-    output = model.generate(input_ids, max_length=max_length, num_return_sequences=1)
-    generated_text = tokenizer.decode(output[0], skip_special_tokens=True)
-
-    return generated_text
 
 
 async def execute_inference(request_schema: MessageRequestSchema) -> str:
@@ -99,9 +86,7 @@ async def execute_inference(request_schema: MessageRequestSchema) -> str:
     prompt = request_schema.msg
 
     response = ""
-    if request_schema.task == 0:
-        response = generate_answer(prompt, model, tokenizer, request_schema.max_length)
-    elif request_schema.task == 2:
-        response = generate_text(prompt, model, tokenizer)
+    if request_schema.task == 0 or request_schema.task == 2:
+        response = generate_answer(prompt, model, tokenizer, request_schema)
 
     return response
