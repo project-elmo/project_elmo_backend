@@ -53,7 +53,7 @@ class FinetuningRequestSchema(BaseModel):
     eval_steps: int = 500
     save_steps: int = 500
     save_total_limits: int = -1  # "unlimited" is represented as -1
-    run_on_gpu: bool = True
+    max_length: int = 512
     load_best_at_the_end: bool = False
     dataset: str = "/home/datasets/qa_pet_small.json"
     task: int = 0  # 모델의 목적:: 0 QA 1 Classification 2 Generate
@@ -76,7 +76,7 @@ class TrainingSessionRequestSchema(BaseModel):
     eval_steps: int = 500
     save_steps: int = 500
     save_total_limits: int = -1  # "unlimited" is represented as -1
-    run_on_gpu: bool = True
+    max_length: int = 512
     load_best_at_the_end: bool = False
     dataset: str = "/home/datasets/qa_pet_small.json"
     task: int = 0  # 모델의 목적:: 0 QA 1 Classification 2 Generate

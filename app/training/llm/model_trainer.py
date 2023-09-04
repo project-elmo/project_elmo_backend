@@ -44,7 +44,7 @@ async def train_model(
     initial_training: bool,
 ) -> Union[FinetuningModel, TrainingSession]:
     # Check if CUDA is available
-    device = True if await get_setting_device() == "false" else False,
+    device = True if await get_setting_device() == "false" else False
 
     pm_name = training_param.pm_name
     fm_name = training_param.fm_name
@@ -55,7 +55,7 @@ async def train_model(
 
     # Load the dataset
     tokenized_datasets = await load_and_tokenize_dataset(
-        training_param.dataset, tokenizer, training_param.task
+        training_param.dataset, tokenizer, training_param
     )
 
     # Set Trainer
@@ -114,7 +114,10 @@ async def train_model(
         return session
 
 
-def tokenize_qa(tokenizer: PreTrainedTokenizer):
+def tokenize_qa(
+    tokenizer: PreTrainedTokenizer,
+    training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema],
+):
     def _tokenize(batch):
         try:
             encoding = tokenizer(
@@ -122,7 +125,7 @@ def tokenize_qa(tokenizer: PreTrainedTokenizer):
                 batch["answer"],
                 truncation=True,
                 padding="max_length",
-                max_length=512,
+                max_length=training_param.max_length,
             )
             encoding["labels"] = encoding["input_ids"].copy()
             return encoding
@@ -170,7 +173,11 @@ async def get_setting_device() -> str:
     return is_gpu
 
 
-async def load_and_tokenize_dataset(dataset_path: str, tokenizer, task: int) -> Dataset:
+async def load_and_tokenize_dataset(
+    dataset_path: str,
+    tokenizer,
+    training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema],
+) -> Dataset:
     """
     Loads the dataset from the given path and tokenizes it.
 
@@ -188,12 +195,14 @@ async def load_and_tokenize_dataset(dataset_path: str, tokenizer, task: int) -> 
         loaders.get(extension, "default_value"), data_files=dataset_path
     )
 
-    if task == 0:
-        return dataset.map(tokenize_qa(tokenizer), batched=True)
-    return dataset.map(tokenize_qa(tokenizer), batched=True)
+    if training_param.task == 0:
+        return dataset.map(tokenize_qa(tokenizer, training_param), batched=True)
+    return dataset.map(tokenize_qa(tokenizer, training_param), batched=True)
 
 
-def get_training_args(training_param: FinetuningRequestSchema, device: bool) -> TrainingArguments:
+def get_training_args(
+    training_param: FinetuningRequestSchema, device: bool
+) -> TrainingArguments:
     common_args = {
         "output_dir": config.RESULT_DIR,
         "num_train_epochs": training_param.epochs,
@@ -206,6 +215,7 @@ def get_training_args(training_param: FinetuningRequestSchema, device: bool) -> 
         "eval_steps": training_param.eval_steps,
         "save_strategy": training_param.save_strategy,
         "use_cpu": not device,
+        "max_length": training_param.max_length,
     }
 
     if training_param.save_total_limits != -1:

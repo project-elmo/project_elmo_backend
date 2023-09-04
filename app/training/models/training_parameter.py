@@ -7,7 +7,10 @@ from sqlalchemy import (
     String,
     ForeignKey,
 )
-from app.training.schemas.training import FinetuningRequestSchema, TrainingSessionRequestSchema
+from app.training.schemas.training import (
+    FinetuningRequestSchema,
+    TrainingSessionRequestSchema,
+)
 from core.db import Base
 
 
@@ -33,12 +36,17 @@ class TrainingParameter(Base):
     save_total_limits = Column(
         Integer, nullable=False
     )  # 'unlimited' is represented as -1
-    run_on_gpu = Column(Boolean, nullable=False)
+    max_length = Column(Integer, default=512, nullable=False)
     load_best_at_the_end = Column(Boolean, nullable=False)
     dataset = Column(String(255), nullable=False, comment="훈련에 쓰인 dataset file path")
 
     @classmethod
-    def from_schema(cls, schema: Union[FinetuningRequestSchema, TrainingSessionRequestSchema], session_no: int, fm_no: int):
+    def from_schema(
+        cls,
+        schema: Union[FinetuningRequestSchema, TrainingSessionRequestSchema],
+        session_no: int,
+        fm_no: int,
+    ):
         return cls(
             session_no=session_no,
             fm_no=fm_no,
@@ -53,7 +61,7 @@ class TrainingParameter(Base):
             eval_steps=schema.eval_steps,
             save_steps=schema.save_steps,
             save_total_limits=schema.save_total_limits,
-            run_on_gpu=schema.run_on_gpu,
+            max_length=schema.max_length,
             load_best_at_the_end=schema.load_best_at_the_end,
             dataset=schema.dataset,
         )
