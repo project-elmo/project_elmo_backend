@@ -45,13 +45,15 @@ async def train_model(
 ) -> Union[FinetuningModel, TrainingSession]:
     # Check if CUDA is available
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    pm = await TrainingService().get_pm_by_pm_no(pm_no=training_param.pm_no)
 
+    base_model = pm.base_model
     pm_name = training_param.pm_name
     fm_name = training_param.fm_name
 
     # Load the pre-trained model and tokenizer
-    tokenizer = initialize_tokenizer(pm_name)
-    model = initialize_model(pm_name)
+    tokenizer = initialize_tokenizer(base_model)
+    model = initialize_model(base_model)
 
     # Load the dataset
     tokenized_datasets = await load_and_tokenize_dataset(

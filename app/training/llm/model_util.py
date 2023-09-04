@@ -12,7 +12,7 @@ from core.config import config
 
 
 def initialize_model(model_name_or_path: str) -> PreTrainedModel:
-    if model_name_or_path == "gpt2":
+    if "gpt2" in model_name_or_path.lower():
         model = GPT2LMHeadModel.from_pretrained(
             model_name_or_path, local_files_only=True
         )
@@ -24,7 +24,7 @@ def initialize_model(model_name_or_path: str) -> PreTrainedModel:
 
 
 def initialize_tokenizer(model_name: str) -> PreTrainedTokenizer:
-    if model_name == "gpt2":
+    if "gpt2" in model_name.lower():
         tokenizer = GPT2Tokenizer.from_pretrained(model_name)
         tokenizer.pad_token = tokenizer.eos_token
     else:
