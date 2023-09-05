@@ -34,7 +34,7 @@ tasks = [DOWNLOADING, TRAINING, RESULT]
 
 
 @training_router.get(
-    "/hub_download/", dependencies=[Depends(PermissionDependency([AllowAll]))]
+    "/hub_download", dependencies=[Depends(PermissionDependency([AllowAll]))]
 )
 async def start_hub_download(background_tasks: BackgroundTasks, model_name: str):
     """Initiates a background download task."""
@@ -48,7 +48,7 @@ async def start_hub_download(background_tasks: BackgroundTasks, model_name: str)
 
 
 @training_router.get(
-    "/remove_pretrained/", dependencies=[Depends(PermissionDependency([AllowAll]))]
+    "/remove_pretrained", dependencies=[Depends(PermissionDependency([AllowAll]))]
 )
 async def remove_pretrained(model_name: str):
     Cache.delete(f"{model_name}_{DOWNLOADING}")
@@ -70,7 +70,7 @@ async def remove_pretrained(model_name: str):
 
 
 @training_router.get(
-    "/pretrained_models/",
+    "/pretrained_models",
     response_model=List[PretrainedModelResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
 )
@@ -100,7 +100,7 @@ async def list_all_pretrained_models():
     return schema_models
 
 
-@training_router.post("/data_upload/")
+@training_router.post("/data_upload")
 async def upload_file(file: UploadFile = File(...)):
     datasets_path = config.DATASET_DIR
     file_location = os.path.join(datasets_path, file.filename)
@@ -253,7 +253,7 @@ async def receive_commands(ws: WebSocket):
             Cache.set(TRAINING_CONTINUE, "False")
 
 
-@training_router.websocket("/ws/progress/")
+@training_router.websocket("/ws/progress")
 async def websocket_endpoint(ws: WebSocket):
     await ws.accept()
     print("websocket_log_cache::", Cache.get_all())

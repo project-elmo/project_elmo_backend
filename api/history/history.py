@@ -12,7 +12,7 @@ from app.user.schemas import ExceptionResponseSchema
 history_router = APIRouter()
 
 @history_router.get(
-    "/finetuned_models/",
+    "/finetuned_models",
     response_model=List[FinetuningModelResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
 )
@@ -23,7 +23,7 @@ async def list_all_finetuned_models():
 
 
 @history_router.get(
-    "/training_sessions/{fm_no}/",
+    "/training_sessions/{fm_no}",
     response_model=List[TrainingSessionResponseSchema],
     responses={"400": {"model": ExceptionResponseSchema}},
 )
@@ -43,7 +43,7 @@ async def list_training_sessions_by_fm(fm_no: int):
 
 
 @history_router.get(
-    "/training_parameters/{session_no}/",
+    "/training_parameters/{session_no}",
     response_model=TrainingParameterResponseSchema,
     responses={"400": {"model": ExceptionResponseSchema}},
 )
