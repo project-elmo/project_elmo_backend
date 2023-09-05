@@ -8,16 +8,6 @@ from app.user.schemas import (
 
 setting_router = APIRouter()
 
-
-@setting_router.post(
-    "/create_setting",
-    response_model=SettingSchema,
-    responses={"400": {"model": ExceptionResponseSchema}},
-)
-async def create_setting(setting: SettingSchema):
-    return await SettingService().create_setting(setting)
-
-
 @setting_router.get(
     "/get_setting",
     response_model=SettingSchema,
