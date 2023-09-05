@@ -215,7 +215,6 @@ def get_training_args(
         "eval_steps": training_param.eval_steps,
         "save_strategy": training_param.save_strategy,
         "use_cpu": not device,
-        "max_length": training_param.max_length,
     }
 
     if training_param.save_total_limits != -1:
