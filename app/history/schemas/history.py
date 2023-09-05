@@ -51,6 +51,5 @@ class TrainingParameterResponseSchema(BaseModel):
     eval_steps: int
     save_steps: int
     save_total_limits: int
-    run_on_gpu: bool
     load_best_at_the_end: bool
     dataset: str
