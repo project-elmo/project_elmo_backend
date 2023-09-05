@@ -8,7 +8,7 @@ class Config(BaseSettings):
     ENV: str = "dev"
     DEBUG: bool = True
     APP_HOST: str = "0.0.0.0"
-    APP_PORT: int = 8000
+    APP_PORT: int = 80
     WRITER_DB_URL: str = f"mysql+aiomysql://root:fastapi@db:3306/fastapi?charset=utf8"
     READER_DB_URL: str = f"mysql+aiomysql://root:fastapi@localhost:3306/fastapi?charset=utf8"
     JWT_SECRET_KEY: str = "fastapi"

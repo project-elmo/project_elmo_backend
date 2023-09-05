@@ -285,7 +285,7 @@ class HealthCheckCallback(TrainerCallback):
         # Implement a simple check to the health endpoint.
         # If the endpoint is down, set `control.should_training_stop` to True.
         try:
-            response = requests.get("http://0.0.0.0:8000/health")
+            response = requests.get("http://0.0.0.0:80/health")
             if response.status_code != 200:
                 control.should_training_stop = "True"
                 Cache.delete(f"{self.repo_id}_training")
