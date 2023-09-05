@@ -50,7 +50,7 @@ class SettingService:
                 .values(
                     model_path=setting.model_path,
                     result_path=setting.result_path,
-                    is_gpu=setting.is_use_gpu,
+                    is_gpu=setting.is_gpu_use,
                 )
             )
             await session.execute(query)
@@ -74,8 +74,8 @@ class SettingService:
             if not setting:
                 setting = await self.create_setting()
 
-            self.set_is_gpu(str(setting.is_use_gpu))
-            return str(setting.is_use_gpu)
+            self.set_is_gpu(str(setting.is_gpu_use))
+            return str(setting.is_gpu_use)
 
     def set_is_gpu(self, is_gpu: str):
         Cache.set(IS_GPU, str(is_gpu))
