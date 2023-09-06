@@ -57,6 +57,7 @@ def generate_answer(
         pad_token_id=tokenizer.eos_token_id,
         max_length=request_schema.max_length,
         temperature=request_schema.temperature,
+        do_sample=True,
         top_k=request_schema.top_k,
         top_p=request_schema.top_p,
         repetition_penalty=request_schema.repetition_penalty,
@@ -65,7 +66,9 @@ def generate_answer(
     generated_answer = tokenizer.decode(
         output[0][len(input_ids[0]) :], skip_special_tokens=True
     )
+    logger.info(tokenizer.decode(output[0]))
     logger.info(generated_answer)
+
     return generated_answer
 
 
