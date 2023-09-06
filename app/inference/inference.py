@@ -62,11 +62,11 @@ def generate_answer(
         repetition_penalty=request_schema.repetition_penalty,
         no_repeat_ngram_size=request_schema.no_repeat_ngram_size,
     )
-
-    generated_answer = tokenizer.decode(output[0], skip_special_tokens=True)
-    answer = generated_answer.replace(input_text, "").strip()
-    logger.info(answer)
-    return answer
+    generated_answer = tokenizer.decode(
+        output[0][len(input_ids[0]) :], skip_special_tokens=True
+    )
+    logger.info(generated_answer)
+    return generated_answer
 
 
 async def execute_inference(request_schema: MessageRequestSchema) -> str:
