@@ -77,18 +77,26 @@ class InferenceService:
         session_no: int,
     ) -> Test:
         """
-        Create a test by session number if it does not exist; otherwise, return the existing test
+        Create a test by session number if it does not exist; 
+        otherwise, return the existing test
         """
         try:
-            fm: FinetuningModel = await self.get_fm_by_session_no(session_no)
-
-            query = select(Test).filter_by(session_no=session_no, fm_no=fm.fm_no)
+            query = (
+                select(Test)
+                .options(
+                    joinedload(Test.training_session).joinedload(
+                        TrainingSession.finetuning_model
+                    )
+                )
+                .filter(Test.session_no == session_no)
+            )            
             result = await session.execute(query)
-            existing_test = result.scalars().first()
+            existing_test:Test = result.scalar()
 
             if existing_test:
                 return existing_test
 
+            fm: FinetuningModel = await self.get_fm_by_session_no(session_no)
             test = Test(
                 session_no=session_no,
                 fm_no=fm.fm_no,

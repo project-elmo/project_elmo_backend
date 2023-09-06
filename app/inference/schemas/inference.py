@@ -1,4 +1,5 @@
 from typing import List
+from app.inference.models.test import Test
 from pydantic import BaseModel, ConfigDict
 import datetime
 
@@ -12,7 +13,7 @@ class TestResponseSchema(BaseModel):
     session_no: int
     ts_model_name: str  # 해당 테스트의 부모 세션의 모델 이름
     fm_no: int  # 해당 테스트의 부모 fm_no
-    fm_name: str  # 해당 테스트의 부모 fm_namo
+    fm_name: str  # 해당 테스트의 부모 fm_name
 
 
 class GetTestListResponseSchema(BaseModel):
