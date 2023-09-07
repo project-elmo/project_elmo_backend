@@ -1,4 +1,4 @@
-FROM jharinn/elmo:gpu
+FROM jharinn/elmo:v2
 WORKDIR /home
 
 ENV ENV=dev
@@ -19,4 +19,4 @@ RUN poetry install --no-dev
 COPY . /home
 
 RUN chmod +x /home/docker/api/startup.sh
-ENTRYPOINT ["/home/docker/api/startup.sh"]
+ENTRYPOINT /home/docker/api/startup.sh

@@ -2,6 +2,7 @@ from core.config import config
 
 import json
 import redis
+from loguru import logger
 
 
 class RedisHelper:
@@ -21,7 +22,7 @@ class RedisHelper:
             try:
                 return json.loads(value.decode("utf-8"))
             except json.JSONDecodeError as e:
-                print(f"Error parsing JSON data: {e}")
+                # print(f"Error parsing JSON data: {e}")
                 return value.decode("utf-8")
         return None
 
@@ -52,8 +53,11 @@ class RedisHelper:
         self.redis.delete(key)
 
     def delete_startswith(self, value: str) -> None:
-        for key in self.redis.scan_iter(f"{value}*"):
-            self.redis.delete(key)
+        try:
+            for key in self.redis.scan_iter(f"{value}*"):
+                self.redis.delete(key)
+        except Exception as e:
+            logger.debug(e)
 
     def exists(self, key):
         return self.redis.exists(key)

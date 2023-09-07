@@ -8,9 +8,9 @@ class Config(BaseSettings):
     ENV: str = "dev"
     DEBUG: bool = True
     APP_HOST: str = "0.0.0.0"
-    APP_PORT: int = 8000
-    WRITER_DB_URL: str = f"mysql+aiomysql://root:fastapi@localhost:3306/fastapi"
-    READER_DB_URL: str = f"mysql+aiomysql://root:fastapi@localhost:3306/fastapi"
+    APP_PORT: int = 80
+    WRITER_DB_URL: str = f"mysql+aiomysql://root:fastapi@db:3306/fastapi?charset=utf8"
+    READER_DB_URL: str = f"mysql+aiomysql://root:fastapi@localhost:3306/fastapi?charset=utf8"
     JWT_SECRET_KEY: str = "fastapi"
     JWT_ALGORITHM: str = "HS256"
     SENTRY_SDN: Optional[str] = None
@@ -18,27 +18,29 @@ class Config(BaseSettings):
     CELERY_BACKEND_URL: str = "redis://:password123@localhost:6379/0"
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
-    DL_DIR: str = os.path.join(os.environ["HOME"], "elmo")
-    DATA_DIR: str = os.path.join(DL_DIR, "data")
-    MODELS_DIR: str = os.path.join(DATA_DIR, "models")
+    DL_DIR: str = os.path.join(os.environ["HOME"], ".cache","huggingface")
+    RESULT_DIR: str = os.path.join(DL_DIR, "elmo", "result")
+    DATASET_DIR: str = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "datasets"
+    )
 
 
 class DevelopmentConfig(Config):
-    WRITER_DB_URL: str = f"mysql+aiomysql://root:fastapi@db:3306/fastapi"
-    READER_DB_URL: str = f"mysql+aiomysql://root:fastapi@db:3306/fastapi"
+    WRITER_DB_URL: str = f"mysql+aiomysql://root:fastapi@db:3306/fastapi?charset=utf8"
+    READER_DB_URL: str = f"mysql+aiomysql://root:fastapi@db:3306/fastapi?charset=utf8"
     REDIS_HOST: str = "redis"
     REDIS_PORT: int = 6379
 
 
 class LocalConfig(Config):
-    WRITER_DB_URL: str = f"mysql+aiomysql://root:fastapi@localhost:3306/fastapi"
-    READER_DB_URL: str = f"mysql+aiomysql://root:fastapi@localhost:3306/fastapi"
+    WRITER_DB_URL: str = f"mysql+aiomysql://root:fastapi@localhost:3306/fastapi?charset=utf8"
+    READER_DB_URL: str = f"mysql+aiomysql://root:fastapi@localhost:3306/fastapi?charset=utf8"
 
 
 class ProductionConfig(Config):
     DEBUG: bool = False
-    WRITER_DB_URL: str = f"mysql+aiomysql://root:fastapi@localhost:3306/prod"
-    READER_DB_URL: str = f"mysql+aiomysql://root:fastapi@localhost:3306/prod"
+    WRITER_DB_URL: str = f"mysql+aiomysql://root:fastapi@localhost:3306/prod?charset=utf8"
+    READER_DB_URL: str = f"mysql+aiomysql://root:fastapi@localhost:3306/prod?charset=utf8"
 
 
 def get_config():

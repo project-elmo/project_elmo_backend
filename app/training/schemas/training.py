@@ -1,13 +1,24 @@
 from pydantic import BaseModel, ConfigDict
 
 
+class PretrainedModelResponseSchema(BaseModel):
+    pm_no: int = 1
+    name: str
+    description: str
+    version: str
+    base_model: str
+    is_downloaded: bool
+
+
 class ProgressResponseSchema(BaseModel):
-    model_config = ConfigDict(protected_namespaces=("model_"))
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
 
     task: str  # [downloading, training, None]
     model_name: str
-    total: str  # 100 for 'training', file size for 'downloading' eg. 100M or 1GB
-    curr_size: str  # always 0 for 'training', current file size for 'downloading'
+    total: str  # total steps for 'training', file size for 'downloading' eg. 100M or 1GB
+    curr_size: str  # current steps 0 for 'training', current file size for 'downloading'
     curr_percent: int
     start_time: str
     end_time: str
@@ -27,10 +38,11 @@ class ProgressResponseSchema(BaseModel):
         )
 
 
-class TrainingParameterRequestSchema(BaseModel):
-    model_config = ConfigDict(protected_namespaces=("model_", "elapsed_", "e"))
-    model_name: str
-    base_model_name: str
+class FinetuningRequestSchema(BaseModel):
+    pm_no: int = 1
+    pm_name: str = "gpt2"
+    fm_name: str = "gpt2_chat"  # 파인튜닝 후 저장할 모델의 이름
+    ts_model_name: str = ""  # 해당 세션으로 파인튜닝된 모델의 이름-기본값: epoch, loss로 표시
     epochs: int = 3
     save_strategy: str = "steps"
     logging_strategy: str = "steps"
@@ -41,6 +53,37 @@ class TrainingParameterRequestSchema(BaseModel):
     eval_steps: int = 500
     save_steps: int = 500
     save_total_limits: int = -1  # "unlimited" is represented as -1
-    run_on_gpu: bool = True
+    max_length: int = 512
     load_best_at_the_end: bool = False
-    dataset: str
+    dataset: str = "/home/datasets/qa_pet_small.json"
+    task: int = 0  # 모델의 목적:: 0 QA 1 Classification 2 Generate
+
+
+class TrainingSessionRequestSchema(BaseModel):
+    pm_no: int = 1
+    pm_name: str = "gpt2"
+    fm_no: int = 1
+    fm_name: str = "gpt2_chat"  # 기존에 저장된 파인튜닝된 모델의 이름
+    parent_session_no: str = ""
+    ts_model_name: str = ""  # 해당 세션으로 파인튜닝된 모델의 이름-기본값: epoch, loss로 표시
+    epochs: int = 3
+    save_strategy: str = "steps"
+    logging_strategy: str = "steps"
+    evaluation_strategy: str = "no"
+    learning_rate: float = 5.00e-05
+    weight_decay: float = 0.0
+    batch_size: int = 8
+    eval_steps: int = 500
+    save_steps: int = 500
+    save_total_limits: int = -1  # "unlimited" is represented as -1
+    max_length: int = 512
+    load_best_at_the_end: bool = False
+    dataset: str = "/home/datasets/qa_pet_small.json"
+    task: int = 0  # 모델의 목적:: 0 QA 1 Classification 2 Generate
+
+
+class DatasetResponseSchema(BaseModel):
+    file_path: str
+    size: int  # in bytes
+    filename: str
+    extension: str

@@ -9,18 +9,18 @@ class TrainingSession(Base):
     session_no = Column(
         Integer, primary_key=True, autoincrement=True, comment="AUTO_INCREMENT"
     )
-    fm_no = Column(
-        Integer,
-        ForeignKey("finetuning_model.fm_no"),
-        primary_key=True,
-        comment="AUTO_INCREMENT",
-    )
+    fm_no = Column(Integer, ForeignKey("finetuning_model.fm_no"), nullable=False)
     parent_session_no = Column(Integer, nullable=False, comment="부모 모델의 세션번호")
-    start_time = Column(DateTime, default=func.now(), nullable=False)
-    end_time = Column(DateTime, default=func.now(), nullable=False)
-    ts_model_name = Column(
-        String(50), nullable=False, comment="해당 세션으로 파인튜닝된 모델의 이름-epoch, loss율로 표시"
+    start_time = Column(
+        DateTime, default=func.now(), nullable=False, comment="YYYY-MM-DD HH:MM:SS"
     )
+    end_time = Column(
+        DateTime, default=func.now(), nullable=False, comment="YYYY-MM-DD HH:MM:SS"
+    )
+    ts_model_name = Column(
+        String(50), nullable=False, comment="해당 세션으로 파인튜닝된 모델의 이름-기본값: epoch, loss로 표시"
+    )
+    uuid = Column(String(50), nullable=False, comment="저장 폴더명에 사용되는 uuid")
 
     finetuning_model = relationship(
         "FinetuningModel", back_populates="training_sessions"
@@ -28,3 +28,16 @@ class TrainingSession(Base):
     training_parameter = relationship(
         "TrainingParameter", uselist=False, backref="training_session"
     )
+    tests = relationship("Test", uselist=False, back_populates="training_session")
+
+    @property
+    def fm_name(self):
+        return self.finetuning_model.fm_name
+
+    @property
+    def pm_no(self):
+        return self.finetuning_model.pm_no
+
+    @property
+    def pm_name(self):
+        return self.finetuning_model.pm_name
