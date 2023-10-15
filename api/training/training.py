@@ -21,7 +21,11 @@ from app.history.schemas.history import (
     FinetuningModelResponseSchema,
     TrainingSessionResponseSchema,
 )
-from app.training.llm.model_trainer import train_model
+from app.training.llm.model_trainer import (
+    extract_columns_from_csv,
+    extract_keys_from_json,
+    train_model,
+)
 from app.training.download import hub_download
 from app.training.models import TrainingSession, FinetuningModel
 from app.training.schemas.training import *
@@ -135,6 +139,34 @@ async def get_datasets():
             datasets.append(data)
 
     return datasets
+
+
+@training_router.post(
+    "/training/get_data_keys",
+    response_model=GetDatasetKeysResponseSchema,
+    responses={"400": {"model": ExceptionResponseSchema}},
+)
+async def get_data_keys(req: GetDatasetKeysRequestSchema):
+    """
+    Return the column names/keys of the dataset file
+    """
+    if not os.path.exists(req.dataset):
+        raise HTTPException(status_code=404, detail=f"File {req.dataset} not found.")
+
+    # req.dataset is /home/datasets/qa_pet_small.json
+
+    _, extension = os.path.splitext(req.dataset)
+
+    if extension == ".csv":
+        columns = extract_columns_from_csv(req.dataset)
+        return GetDatasetKeysResponseSchema(columns)
+    elif extension == ".json":
+        columns = extract_keys_from_json(req.dataset)
+        return GetDatasetKeysResponseSchema(columns)
+    else:
+        raise HTTPException(
+            status_code=400, detail=f"Unsupported file format: {extension}"
+        )
 
 
 @training_router.post(

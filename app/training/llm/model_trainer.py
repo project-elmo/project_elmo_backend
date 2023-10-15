@@ -5,7 +5,9 @@ import uuid
 import requests
 import torch
 import os
+import csv
 import json
+
 from transformers import (
     GPT2LMHeadModel,
     AutoTokenizer,
@@ -303,3 +305,15 @@ class HealthCheckCallback(TrainerCallback):
             Cache.delete(f"{self.repo_id}_training")
             logger.debug(f"Training stopped due to stop_training command")
             return
+
+
+def extract_columns_from_csv(file_path: str) -> list:
+    with open(file_path, "r") as f:
+        reader = csv.DictReader(f)
+        return reader.fieldnames
+
+
+def extract_keys_from_json(file_path: str) -> list:
+    with open(file_path, "r") as f:
+        data = json.load(f)
+        return data[0].keys() if isinstance(data, list) and data else []

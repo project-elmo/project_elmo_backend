@@ -1,3 +1,4 @@
+from typing import List
 from pydantic import BaseModel, ConfigDict
 
 
@@ -57,6 +58,15 @@ class FinetuningRequestSchema(BaseModel):
     load_best_at_the_end: bool = False
     dataset: str = "/home/datasets/qa_pet_small.json"
     task: int = 0  # 모델의 목적:: 0 QA 1 Classification 2 Generate
+    keys_to_use: List[str] = []  # index 0: user input, index 1: model response
+
+
+class GetDatasetKeysRequestSchema(BaseModel):
+    dataset: str = "/home/datasets/qa_pet_small.json"
+
+
+class GetDatasetKeysResponseSchema(BaseModel):
+    keys_in_data: List[str] = []
 
 
 class TrainingSessionRequestSchema(BaseModel):
