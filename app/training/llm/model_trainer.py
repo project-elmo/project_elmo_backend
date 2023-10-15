@@ -122,8 +122,8 @@ def tokenize_qa(
     def _tokenize(batch):
         try:
             encoding = tokenizer(
-                batch["question"],
-                batch["answer"],
+                batch[f"{training_param.keys_to_use[0]}"],
+                batch[f"{training_param.keys_to_use[1]}"],
                 truncation=True,
                 padding="max_length",
                 max_length=training_param.max_length,
@@ -198,7 +198,12 @@ async def load_and_tokenize_dataset(
 
     if training_param.task == 0:
         return dataset.map(tokenize_qa(tokenizer, training_param), batched=True)
-    return dataset.map(tokenize_qa(tokenizer, training_param), batched=True)
+    elif training_param.task == 1:
+        return dataset.map(tokenize_qa(tokenizer, training_param), batched=True)
+    elif training_param.task == 2:
+        return dataset.map(tokenize_qa(tokenizer, training_param), batched=True)
+    else:
+        return dataset.map(tokenize_qa(tokenizer, training_param), batched=True)
 
 
 def get_training_args(
