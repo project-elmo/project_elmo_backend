@@ -41,7 +41,6 @@ class ProgressResponseSchema(BaseModel):
 
 class FinetuningRequestSchema(BaseModel):
     pm_no: int = 1
-    pm_name: str = "gpt2"
     fm_name: str = "gpt2_chat"  # 파인튜닝 후 저장할 모델의 이름
     ts_model_name: str = ""  # 해당 세션으로 파인튜닝된 모델의 이름-기본값: epoch, loss로 표시
     epochs: int = 3
@@ -57,7 +56,7 @@ class FinetuningRequestSchema(BaseModel):
     max_length: int = 512
     load_best_at_the_end: bool = False
     dataset: str = "/home/datasets/qa_pet_small.json"
-    task: int = 0  # 모델의 목적:: 0 QA 1 Classification 2 Generate
+    task: int = 0  # 모델의 목적:: 0 Chatbot 1 QA 2 Classification 3 Generate
     keys_to_use: List[str] = []  # index 0: user input, index 1: model response
 
 
@@ -70,10 +69,7 @@ class GetDatasetKeysResponseSchema(BaseModel):
 
 
 class TrainingSessionRequestSchema(BaseModel):
-    pm_no: int = 1
-    pm_name: str = "gpt2"
     fm_no: int = 1
-    fm_name: str = "gpt2_chat"  # 기존에 저장된 파인튜닝된 모델의 이름
     parent_session_no: str = ""
     ts_model_name: str = ""  # 해당 세션으로 파인튜닝된 모델의 이름-기본값: epoch, loss로 표시
     epochs: int = 3
@@ -89,7 +85,8 @@ class TrainingSessionRequestSchema(BaseModel):
     max_length: int = 512
     load_best_at_the_end: bool = False
     dataset: str = "/home/datasets/qa_pet_small.json"
-    task: int = 0  # 모델의 목적:: 0 QA 1 Classification 2 Generate
+    task: int = 0  # 모델의 목적:: 0 Chatbot 1 QA 2 Classification 3 Generate
+    keys_to_use: List[str] = []  # index 0: user input, index 1: model response
 
 
 class DatasetResponseSchema(BaseModel):

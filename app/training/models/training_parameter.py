@@ -50,7 +50,6 @@ class TrainingParameter(Base):
         return cls(
             session_no=session_no,
             fm_no=fm_no,
-            model_name=schema.pm_name,
             epochs=schema.epochs,
             save_strategy=schema.save_strategy,
             logging_strategy=schema.logging_strategy,

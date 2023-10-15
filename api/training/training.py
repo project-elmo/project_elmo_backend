@@ -28,6 +28,7 @@ from app.training.llm.model_trainer import (
 )
 from app.training.download import hub_download
 from app.training.models import TrainingSession, FinetuningModel
+from app.training.models.pretrained_model import ModelsResponse, PretrainedModel
 from app.training.schemas.training import *
 from app.training.services.training import TrainingService
 from app.user.schemas import ExceptionResponseSchema
@@ -153,8 +154,7 @@ async def get_data_keys(req: GetDatasetKeysRequestSchema):
     if not os.path.exists(req.dataset):
         raise HTTPException(status_code=404, detail=f"File {req.dataset} not found.")
 
-    # req.dataset is /home/datasets/qa_pet_small.json
-
+    # req.dataset is /home/datasets/filname.json(or csv)
     _, extension = os.path.splitext(req.dataset)
 
     if extension == ".csv":
@@ -189,12 +189,14 @@ async def start_training(training_param: FinetuningRequestSchema):
     """
     task_key = f"{TASK_PREFIX}{TRAINING}"
 
-    Cache.set(task_key, training_param.pm_name)
+    pm_name: str = await TrainingService().get_pm_name_by_pm_no(training_param.pm_no)
+
+    Cache.set(task_key, pm_name)
     finetuning_model: FinetuningModel = await train_model(
-        training_param, initial_training=True
+        training_param, pm_name, training_param.fm_name, initial_training=True
     )
     Cache.delete(task_key)
-    Cache.delete(f"{training_param.pm_name}_{TRAINING}")
+    Cache.delete(f"{pm_name}_{TRAINING}")
 
     if finetuning_model:
         response = FinetuningModelResponseSchema(
@@ -230,25 +232,31 @@ async def start_re_training(training_param: TrainingSessionRequestSchema):
     """
     task_key = f"{TASK_PREFIX}{TRAINING}"
 
-    Cache.set(task_key, training_param.pm_name)
-    session_model: TrainingSession = await train_model(
-        training_param, initial_training=False
-    )
-    Cache.delete(task_key)
-    Cache.delete(f"{training_param.pm_name}_{TRAINING}")
-    if session_model:
-        response = TrainingSessionResponseSchema(
-            session_no=str(session_model.session_no),
-            fm_no=session_model.fm_no,
-            fm_name=training_param.fm_name,
-            pm_no=session_model.pm_no,
-            pm_name=training_param.pm_name,
-            parent_session_no=str(session_model.parent_session_no),
-            start_time=session_model.start_time,
-            end_time=session_model.end_time,
-            ts_model_name=session_model.ts_model_name,
+    data = await TrainingService().get_pm_fm_by_fm_no(training_param.fm_no)
+
+    if data:
+        fm: FinetuningModel = ModelsResponse.finetuning_model
+        pm: PretrainedModel = ModelsResponse.pretrained_model
+
+        Cache.set(task_key, pm.name)
+        session_model: TrainingSession = await train_model(
+            training_param, pm.name, fm.fm_name, initial_training=False
         )
-        return response
+        Cache.delete(task_key)
+        Cache.delete(f"{pm.name}_{TRAINING}")
+        if session_model:
+            response = TrainingSessionResponseSchema(
+                session_no=str(session_model.session_no),
+                fm_no=session_model.fm_no,
+                fm_name=fm.fm_name,
+                pm_no=session_model.pm_no,
+                pm_name=pm.name,
+                parent_session_no=str(session_model.parent_session_no),
+                start_time=session_model.start_time,
+                end_time=session_model.end_time,
+                ts_model_name=session_model.ts_model_name,
+            )
+            return response
     else:
         return {"404": {"model": ExceptionResponseSchema}}
 

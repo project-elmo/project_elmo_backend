@@ -3,7 +3,7 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from app.training.models.pretrained_model import PretrainedModel
+from app.training.models.pretrained_model import ModelsResponse, PretrainedModel
 from app.training.schemas.training import (
     FinetuningRequestSchema,
     TrainingSessionRequestSchema,
@@ -117,6 +117,29 @@ class TrainingService:
         result = await session.execute(query)
         record = result.scalar()
         return record
+
+    async def get_pm_name_by_pm_no(self, pm_no: int) -> str:
+        query = select(PretrainedModel.name).where(PretrainedModel.pm_no == pm_no)
+        result = await session.execute(query)
+        record = result.scalar()
+        return record
+
+    async def get_pm_fm_by_fm_no(self, fm_no: int) -> ModelsResponse:
+        query = (
+            select(FinetuningModel, PretrainedModel)
+            .join(
+                PretrainedModel, FinetuningModel.pretrained_model
+            )  # ensure correct relationship join
+            .where(FinetuningModel.fm_no == fm_no)
+        )
+        result = await session.execute(query)
+        finetuning_model_instance, pretrained_model_instance = result.one_or_none()
+
+        if finetuning_model_instance and pretrained_model_instance:
+            return ModelsResponse
+        else:
+            logger.error(f"No matching entry found for fm_no: {fm_no}")
+            return None
 
     async def get_all_pretrained_models(self) -> List[PretrainedModel]:
         query = select(PretrainedModel)

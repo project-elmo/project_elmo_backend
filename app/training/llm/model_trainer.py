@@ -43,13 +43,12 @@ from core.config import config
 
 async def train_model(
     training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema],
+    pm_name: str,
+    fm_name: str,
     initial_training: bool,
 ) -> Union[FinetuningModel, TrainingSession]:
     # Check if CUDA is available
     device = True if await get_setting_device() == "false" else False
-
-    pm_name = training_param.pm_name
-    fm_name = training_param.fm_name
 
     # Load the pre-trained model and tokenizer
     tokenizer = initialize_tokenizer(pm_name)
@@ -63,7 +62,7 @@ async def train_model(
     # Set Trainer
     training_args = get_training_args(training_param, device)
     trainer: Trainer = setup_training(
-        model, training_args, tokenized_datasets, training_param
+        model, training_args, tokenized_datasets, training_param, pm_name
     )
 
     # Start training
@@ -72,7 +71,7 @@ async def train_model(
 
     # Send the progress via socket
     result = await send_progress(
-        start_training, trainer, training_param, initial_training
+        start_training, trainer, training_param, initial_training, pm_name
     )
 
     end_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
@@ -144,7 +143,7 @@ async def send_progress(
     """
     Sends progress metrics of a given function using a socket.
     """
-    model_name = args[1].pm_name
+    model_name = kwargs["pm_name"]
     logger.info(f"model_name: {model_name}")
 
     # Send the progress via socket
@@ -230,12 +229,13 @@ def setup_training(
     training_args: TrainingArguments,
     tokenized_datasets: Dataset,
     training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema],
+    pm_name: str,
 ) -> Trainer:
     trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=tokenized_datasets["train"],
-        callbacks=[HealthCheckCallback(training_param.pm_name)],
+        callbacks=[HealthCheckCallback(pm_name)],
     )
 
     return trainer
@@ -245,6 +245,7 @@ async def start_training(
     trainer: Trainer,
     training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema],
     initial_training: bool,
+    pm_name: str,
 ) -> NamedTuple:
     if initial_training:
         result: NamedTuple = trainer.train()
@@ -253,7 +254,7 @@ async def start_training(
             training_param.parent_session_no
         )
         resume_from_checkpoint = get_model_file_path(
-            training_param.pm_name, training_param.fm_name, uuid
+            pm_name, training_param.fm_name, uuid
         )
         result: NamedTuple = trainer.train(os.path.join(resume_from_checkpoint))
     return result
