@@ -16,7 +16,7 @@ services:
     depends_on:
       - db
     volumes:
-      - $PWD:/home
+      - .:/home
       - $HOME/.cache/huggingface:/root/.cache/huggingface
   db:
     build:

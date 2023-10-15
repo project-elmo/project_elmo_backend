@@ -3,7 +3,6 @@ import shutil
 from typing import List
 
 import asyncio
-from typing import Optional
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -105,13 +104,20 @@ async def list_all_pretrained_models():
 
 @training_router.post("/data_upload")
 async def upload_file(file: UploadFile = File(...)):
-    datasets_path = config.DATASET_DIR
-    file_location = os.path.join(datasets_path, file.filename)
+    try:
+        datasets_path = config.DATASET_DIR
+        file_location = os.path.join(datasets_path, file.filename)
 
-    with open(file_location, "wb+") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        logger.info(f"Saving file to {file_location}")
 
-    return {"filename": file.filename}
+        with open(file_location, "wb+") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        logger.info("File saved successfully.")
+
+        return {"filename": file.filename}
+    except Exception as e:
+        logger.error(f"An error occurred: {str(e)}")
+        raise HTTPException(detail=str(e), status_code=500)
 
 
 @training_router.get("/get_datasets")
