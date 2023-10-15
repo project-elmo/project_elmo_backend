@@ -74,8 +74,8 @@ class SettingService:
             if not setting:
                 setting = await self.create_setting()
 
-            self.set_is_gpu(str(setting.is_gpu_use))
-            return str(setting.is_gpu_use)
+            self.set_is_gpu(str(setting.is_gpu))
+            return str(setting.is_gpu)
 
     def set_is_gpu(self, is_gpu: str):
         Cache.set(IS_GPU, str(is_gpu))
