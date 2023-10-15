@@ -4,7 +4,7 @@ from sqlalchemy import (
     String,
 )
 from sqlalchemy.orm import relationship
-from typing import TypedDict, Optiona
+from typing import TypedDict
 from app.training.models.finetuning_model import FinetuningModel
 from core.db import Base
 
