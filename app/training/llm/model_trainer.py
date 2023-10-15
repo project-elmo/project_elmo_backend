@@ -3,21 +3,16 @@ from datetime import datetime
 from loguru import logger
 import uuid
 import requests
-import torch
 import os
 import csv
 import json
 
 from transformers import (
-    GPT2LMHeadModel,
-    AutoTokenizer,
-    AutoModel,
     Trainer,
     TrainingArguments,
     PreTrainedModel,
     PreTrainedTokenizer,
     TrainerCallback,
-    TrainerControl,
 )
 
 from datasets import load_dataset, Dataset
@@ -71,7 +66,7 @@ async def train_model(
 
     # Send the progress via socket
     result = await send_progress(
-        start_training, trainer, training_param, initial_training, pm_name
+        start_training, trainer, training_param, initial_training, pm_name, fm_name
     )
 
     end_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
@@ -137,13 +132,27 @@ def tokenize_qa(
     return _tokenize
 
 
+def tokenize_classification(tokenizer: PreTrainedTokenizer, training_param):
+    def _tokenize(batch):
+        encoding = tokenizer(
+            batch[f"{training_param.keys_to_use[0]}"],
+            truncation=True,
+            padding="max_length",
+            max_length=training_param.max_length,
+        )
+        encoding["labels"] = batch[f"{training_param.keys_to_use[1]}"]
+        return encoding
+
+    return _tokenize
+
+
 async def send_progress(
     func: Callable[..., NamedTuple], *args: Any, **kwargs: Dict[str, Any]
 ) -> NamedTuple:
     """
     Sends progress metrics of a given function using a socket.
     """
-    model_name = kwargs["pm_name"]
+    model_name = args[3]
     logger.info(f"model_name: {model_name}")
 
     # Send the progress via socket
@@ -201,7 +210,9 @@ async def load_and_tokenize_dataset(
     elif training_param.task == 1:
         return dataset.map(tokenize_qa(tokenizer, training_param), batched=True)
     elif training_param.task == 2:
-        return dataset.map(tokenize_qa(tokenizer, training_param), batched=True)
+        return dataset.map(
+            tokenize_classification(tokenizer, training_param), batched=True
+        )
     else:
         return dataset.map(tokenize_qa(tokenizer, training_param), batched=True)
 
@@ -251,6 +262,7 @@ async def start_training(
     training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema],
     initial_training: bool,
     pm_name: str,
+    fm_name: str,
 ) -> NamedTuple:
     if initial_training:
         result: NamedTuple = trainer.train()
@@ -258,9 +270,7 @@ async def start_training(
         uuid = await TrainingService().get_uuid_by_session_no(
             training_param.parent_session_no
         )
-        resume_from_checkpoint = get_model_file_path(
-            pm_name, training_param.fm_name, uuid
-        )
+        resume_from_checkpoint = get_model_file_path(pm_name, fm_name, uuid)
         result: NamedTuple = trainer.train(os.path.join(resume_from_checkpoint))
     return result
 
