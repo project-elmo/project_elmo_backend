@@ -159,10 +159,10 @@ async def get_data_keys(req: GetDatasetKeysRequestSchema):
 
     if extension == ".csv":
         columns = extract_columns_from_csv(req.dataset)
-        return GetDatasetKeysResponseSchema(columns)
+        return GetDatasetKeysResponseSchema(keys_in_data=columns)
     elif extension == ".json":
         columns = extract_keys_from_json(req.dataset)
-        return GetDatasetKeysResponseSchema(columns)
+        return GetDatasetKeysResponseSchema(keys_in_data=columns)
     else:
         raise HTTPException(
             status_code=400, detail=f"Unsupported file format: {extension}"
