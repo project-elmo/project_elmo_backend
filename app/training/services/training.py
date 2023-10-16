@@ -142,7 +142,10 @@ class TrainingService:
         finetuning_model_instance, pretrained_model_instance = result.one_or_none()
 
         if finetuning_model_instance and pretrained_model_instance:
-            return ModelsResponse
+            return ModelsResponse(
+                finetuning_model=finetuning_model_instance,
+                pretrained_model=pretrained_model_instance,
+            )
         else:
             logger.error(f"No matching entry found for fm_no: {fm_no}")
             return None
