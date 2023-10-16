@@ -46,6 +46,7 @@ class TrainingParameter(Base):
         schema: Union[FinetuningRequestSchema, TrainingSessionRequestSchema],
         session_no: int,
         fm_no: int,
+        model_name: str,
     ):
         return cls(
             session_no=session_no,
@@ -63,4 +64,5 @@ class TrainingParameter(Base):
             max_length=schema.max_length,
             load_best_at_the_end=schema.load_best_at_the_end,
             dataset=schema.dataset,
+            model_name=model_name,
         )

@@ -20,6 +20,8 @@ class TrainingService:
         start_time: str,  # 2023-08-26T21:04:31
         end_time: str,  # 2023-08-26T21:04:31
         uuid: str,
+        pm_name: str,
+        fm_name: str,
         user_no: int = 1,  # TODO: fix,
         parent_session_no: int = 0,  # This will convert into "". The value of the root node for sessions should be an empty string.
     ) -> FinetuningModel:
@@ -28,7 +30,7 @@ class TrainingService:
             ft_model = FinetuningModel(
                 user_no=user_no,
                 pm_no=training_param.pm_no,
-                fm_name=training_param.fm_name,
+                fm_name=fm_name,
                 task=training_param.task,
             )
 
@@ -50,6 +52,7 @@ class TrainingService:
                 training_param,
                 session_no=training_session.session_no,
                 fm_no=ft_model.fm_no,
+                model_name=pm_name,
             )
             training_session.training_parameter = training_parameter
 
@@ -69,6 +72,8 @@ class TrainingService:
         start_time: str,
         end_time: str,
         uuid: str,
+        pm_name: str,
+        fm_name: str,
     ) -> TrainingSession:
         try:
             # Create the training session
@@ -86,6 +91,7 @@ class TrainingService:
                 training_param,
                 session_no=training_session.session_no,
                 fm_no=training_param.fm_no,
+                model_name=pm_name,
             )
             training_session.training_parameter = training_parameter
 

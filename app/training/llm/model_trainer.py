@@ -92,6 +92,8 @@ async def train_model(
                 start_time=start_time,
                 end_time=end_time,
                 uuid=uuid,
+                pm_name=pm_name,
+                fm_name=fm_name,
             )
         )
 
@@ -105,6 +107,8 @@ async def train_model(
             start_time=start_time,
             end_time=end_time,
             uuid=uuid,
+            pm_name=pm_name,
+            fm_name=fm_name,
         )
 
         return session
