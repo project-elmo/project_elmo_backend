@@ -210,7 +210,7 @@ async def start_training(training_param: FinetuningRequestSchema):
             fm_name=finetuning_model.fm_name,
             user_no=finetuning_model.user_no,
             pm_no=finetuning_model.pm_no,
-            pm_name=training_param.pm_name,
+            pm_name=pm_name,
             fm_description=finetuning_model.fm_description,
         )
         return response
