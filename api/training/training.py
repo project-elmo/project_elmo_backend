@@ -241,8 +241,8 @@ async def start_re_training(training_param: TrainingSessionRequestSchema):
     data = await TrainingService().get_pm_fm_by_fm_no(training_param.fm_no)
 
     if data:
-        fm: FinetuningModel = data.finetuning_model
-        pm: PretrainedModel = data.pretrained_model
+        fm: FinetuningModel = data["finetuning_model"]
+        pm: PretrainedModel = data["pretrained_model"]
 
         Cache.set(task_key, pm.name)
         session_model: TrainingSession = await train_model(
