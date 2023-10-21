@@ -10,6 +10,16 @@ class PretrainedModelResponseSchema(BaseModel):
     base_model: str
     is_downloaded: bool
 
+class LoggingResponseSchema(BaseModel):
+    model_config = ConfigDict(  
+        from_attributes=True,
+    )
+    
+    task:str
+    model_name:str
+    loss: str
+    learning_rate: str
+    epoch: str
 
 class ProgressResponseSchema(BaseModel):
     model_config = ConfigDict(

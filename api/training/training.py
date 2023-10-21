@@ -1,6 +1,6 @@
 import os
 import shutil
-from typing import List
+from typing import List, Union
 
 import asyncio
 from fastapi import (
@@ -287,10 +287,15 @@ async def send_progress(ws: WebSocket):
             else:
                 if model_name:
                     progress_data: ProgressResponseSchema = Cache.get(key)
+                    logging_data: LoggingResponseSchema = Cache.get(f"{key}_log")
 
                     if progress_data:
                         await ws.send_json(progress_data)
                         Cache.delete(key)
+                    
+                    if logging_data:
+                        await ws.send_json(logging_data)
+                        Cache.delete(f"{key}_log")
 
             await asyncio.sleep(0.5)  # send updates every half-second
 

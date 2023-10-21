@@ -62,6 +62,7 @@ async def train_model(
 
     # Start training
     start_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    Cache.set(TRAINING_CONTINUE, "True")
     logger.info(f"Training started for {pm_name} at {start_time}")
 
     # Send the progress via socket
