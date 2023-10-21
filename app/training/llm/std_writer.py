@@ -23,7 +23,7 @@ class CustomStdErrWriter:
         )
 
     def write(self, msg: str):
-        if msg.startswith("{"):
+        if msg.startswith("{'loss'"):
             valid_json_text = msg.replace("'", '"')
             data_dict=json.loads(valid_json_text)
             
