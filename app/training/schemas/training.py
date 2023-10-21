@@ -55,9 +55,12 @@ class FinetuningRequestSchema(BaseModel):
     save_total_limits: int = -1  # "unlimited" is represented as -1
     max_length: int = 512
     load_best_at_the_end: bool = False
-    dataset: str = "/home/datasets/qa_pet_small.json"
+    dataset: str = "/home/datasets/qa_small.json"
     task: int = 0  # 모델의 목적:: 0 Chatbot 1 QA 2 Classification 3 Generate
-    keys_to_use: List[str] = []  # index 0: user input, index 1: model response
+    keys_to_use: List[str] = [
+        "question",
+        "answer",
+    ]  # index 0: user input, index 1: model response
 
 
 class GetDatasetKeysRequestSchema(BaseModel):

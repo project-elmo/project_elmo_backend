@@ -11,7 +11,7 @@ class CustomStdErrWriter:
         sys.stderr = self
 
     def write(self, msg: str):
-        self.original_stderr.write(f"Print: {msg}")
+        self.original_stderr.write(f"Print: >>>{msg}<<<")
 
         progress_response = extract_values(msg, self.repo_id)
         if progress_response.task != "None" and not progress_response.total.startswith(

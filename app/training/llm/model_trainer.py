@@ -136,7 +136,10 @@ def tokenize_qa(
     return _tokenize
 
 
-def tokenize_classification(tokenizer: PreTrainedTokenizer, training_param):
+def tokenize_classification(
+    tokenizer: PreTrainedTokenizer,
+    training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema],
+):
     def _tokenize(batch):
         encoding = tokenizer(
             batch[f"{training_param.keys_to_use[0]}"],
@@ -231,8 +234,8 @@ def get_training_args(
         "evaluation_strategy": training_param.evaluation_strategy,
         "learning_rate": training_param.learning_rate,
         "weight_decay": training_param.weight_decay,
-        "logging_strategy": training_param.logging_strategy,
-        "logging_steps": training_param.save_steps,
+        "logging_strategy": "steps",
+        "logging_steps": 1,
         "eval_steps": training_param.eval_steps,
         "save_strategy": training_param.save_strategy,
         "use_cpu": not device,
