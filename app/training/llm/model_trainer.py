@@ -72,6 +72,7 @@ async def train_model(
 
     end_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
+    result_metrics: Dict[str, Union[str, float, int]] = result[2]
     training_param.ts_model_name = training_param.ts_model_name or get_model_name(
         training_param, result, initial_training
     )
@@ -95,6 +96,7 @@ async def train_model(
                 uuid=uuid,
                 pm_name=pm_name,
                 fm_name=fm_name,
+                result_metrics=result_metrics,
             )
         )
 
@@ -110,6 +112,7 @@ async def train_model(
             uuid=uuid,
             pm_name=pm_name,
             fm_name=fm_name,
+            result_metrics=result_metrics,
         )
 
         return session

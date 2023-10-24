@@ -15,6 +15,8 @@ from fastapi import (
     File,
 )
 from fastapi.websockets import WebSocketState
+from fastapi.responses import FileResponse
+
 from loguru import logger
 from app.history.schemas.history import (
     FinetuningModelResponseSchema,
@@ -25,6 +27,7 @@ from app.training.llm.model_trainer import (
     extract_keys_from_json,
     train_model,
 )
+
 from app.training.download import hub_download
 from app.training.models import TrainingSession, FinetuningModel
 from app.training.models.pretrained_model import ModelsResponse, PretrainedModel
@@ -120,6 +123,20 @@ async def upload_file(file: UploadFile = File(...)):
         raise HTTPException(detail=str(e), status_code=500)
 
 
+@training_router.get("/download/{filename}")
+async def download_dataset(filename: str):
+    datasets_path = config.DATASET_DIR
+    file_path = os.path.join(datasets_path, filename)
+
+    # Ensure file exists
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+
+    return FileResponse(
+        file_path, filename=filename, media_type="application/octet-stream"
+    )
+
+
 @training_router.get("/get_datasets")
 async def get_datasets():
     datasets_path = config.DATASET_DIR
@@ -128,7 +145,9 @@ async def get_datasets():
     if not os.path.isdir(datasets_path):
         raise HTTPException(status_code=404, detail="Datasets directory not found")
 
+    extensions: list = ["csv", "json"]
     datasets = []
+
     for filename in os.listdir(datasets_path):
         if filename == ".gitkeep":
             continue
@@ -137,11 +156,16 @@ async def get_datasets():
 
         if os.path.isfile(file_path):
             _, file_extension = os.path.splitext(filename)
+            if file_extension[1:] not in extensions:
+                continue
+
+            download_link = f"/download/{filename}"
             data = DatasetResponseSchema(
                 file_path=file_path,
                 size=os.path.getsize(file_path),
                 filename=filename,
                 extension=file_extension[1:],
+                download_link=download_link,
             )
             datasets.append(data)
 
@@ -292,7 +316,7 @@ async def send_progress(ws: WebSocket):
                     if progress_data:
                         await ws.send_json(progress_data)
                         Cache.delete(key)
-                    
+
                     if logging_data:
                         await ws.send_json(logging_data)
                         Cache.delete(f"{key}_log")

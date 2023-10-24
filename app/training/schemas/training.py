@@ -10,16 +10,18 @@ class PretrainedModelResponseSchema(BaseModel):
     base_model: str
     is_downloaded: bool
 
+
 class LoggingResponseSchema(BaseModel):
-    model_config = ConfigDict(  
+    model_config = ConfigDict(
         from_attributes=True,
     )
-    
-    task:str
-    model_name:str
+
+    task: str
+    model_name: str
     loss: str
     learning_rate: str
     epoch: str
+
 
 class ProgressResponseSchema(BaseModel):
     model_config = ConfigDict(
@@ -105,5 +107,6 @@ class TrainingSessionRequestSchema(BaseModel):
 class DatasetResponseSchema(BaseModel):
     file_path: str
     size: int  # in bytes
-    filename: str
+    filename: str  # "/home/datasets/qa_pet_small.json"
     extension: str
+    download_link: str

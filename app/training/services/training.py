@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List, Union
 from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
@@ -24,7 +24,18 @@ class TrainingService:
         fm_name: str,
         user_no: int = 1,  # TODO: fix,
         parent_session_no: int = 0,  # This will convert into "". The value of the root node for sessions should be an empty string.
+        result_metrics: Dict[str, Union[str, float, int]] = {},
     ) -> FinetuningModel:
+        """
+        result_metrics:
+        {
+            "train_runtime": 23.4126,
+            "train_samples_per_second": 0.427,
+            "train_steps_per_second": 0.214,
+            "train_loss": 4.258505249023438,
+            "epoch": 1.0
+        }
+        """
         try:
             # Create the fine-tuned model
             ft_model = FinetuningModel(
@@ -53,6 +64,7 @@ class TrainingService:
                 session_no=training_session.session_no,
                 fm_no=ft_model.fm_no,
                 model_name=pm_name,
+                train_loss=result_metrics["train_loss"],
             )
             training_session.training_parameter = training_parameter
 
@@ -74,7 +86,18 @@ class TrainingService:
         uuid: str,
         pm_name: str,
         fm_name: str,
+        result_metrics: Dict[str, Union[str, float, int]] = {},
     ) -> TrainingSession:
+        """
+        result_metrics:
+        {
+            "train_runtime": 23.4126,
+            "train_samples_per_second": 0.427,
+            "train_steps_per_second": 0.214,
+            "train_loss": 4.258505249023438,
+            "epoch": 1.0
+        }
+        """
         try:
             # Create the training session
             training_session = TrainingSession(
@@ -92,6 +115,7 @@ class TrainingService:
                 session_no=training_session.session_no,
                 fm_no=training_param.fm_no,
                 model_name=pm_name,
+                train_loss=result_metrics["train_loss"],
             )
             training_session.training_parameter = training_parameter
 
