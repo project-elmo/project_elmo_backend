@@ -308,10 +308,12 @@ async def send_progress(ws: WebSocket):
                         await ws.send_json(result)
                         Cache.delete(key)
                         Cache.delete(task_key)
+                        Cache.delete(f"{key}_log")
             else:
                 if model_name:
                     progress_data: ProgressResponseSchema = Cache.get(key)
                     logging_data: LoggingResponseSchema = Cache.get(f"{key}_log")
+                    logger.info(logging_data)
 
                     if progress_data:
                         await ws.send_json(progress_data)
@@ -321,7 +323,7 @@ async def send_progress(ws: WebSocket):
                         await ws.send_json(logging_data)
                         Cache.delete(f"{key}_log")
 
-            await asyncio.sleep(0.5)  # send updates every half-second
+            await asyncio.sleep(0.5)
 
 
 async def receive_commands(ws: WebSocket):
