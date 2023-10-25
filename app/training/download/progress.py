@@ -15,7 +15,7 @@ def update_progress(progress_data: ProgressResponseSchema):
 
 def update_log(logging_data: LoggingResponseSchema):
     Cache.set(
-        f"{logging_data.model_name}_{logging_data.task}_log",
+        f"{logging_data.model_name}_{logging_data.task}",
         logging_data.model_dump_json(),
     )
 
