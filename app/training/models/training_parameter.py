@@ -24,7 +24,7 @@ class TrainingParameter(Base):
     )
     fm_no = Column(Integer, ForeignKey("finetuning_model.fm_no"), nullable=False)
     model_name = Column(String(255), nullable=False)
-    task = Column(String(255), nullable=False)
+    task = Column(Integer, nullable=False)
     epochs = Column(Integer, nullable=False)
     save_strategy = Column(String(50), nullable=False)
     logging_strategy = Column(String(50), nullable=False)

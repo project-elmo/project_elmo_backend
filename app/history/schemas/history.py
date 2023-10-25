@@ -41,7 +41,7 @@ class TrainingParameterResponseSchema(BaseModel):
     session_no: int = 3
     fm_no: int = 5
     model_name: str
-    task: str
+    task: int
     train_loss: float
     epochs: int
     save_strategy: str
