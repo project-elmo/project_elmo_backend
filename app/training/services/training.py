@@ -57,7 +57,9 @@ class TrainingService:
 
             session.add(ft_model)
             await session.flush()
-
+            
+            logger.info(f'result_metrics["train_loss"] ${result_metrics["train_loss"]}')
+            
             # Create the training parameter
             training_parameter = TrainingParameter.from_schema(
                 training_param,
