@@ -15,34 +15,35 @@ class CustomStdErrWriter:
         sys.stdout = self
 
         self.prev_log = LoggingResponseSchema(
-            task="training",
+            task="training_log",
             model_name=self.repo_id,
-            loss="0", 
-            learning_rate="0", 
+            loss="0",
+            learning_rate="0",
             epoch="0",
         )
 
     def write(self, msg: str):
         if msg.startswith("{'loss'"):
             valid_json_text = msg.replace("'", '"')
-            data_dict=json.loads(valid_json_text)
-            
+            data_dict = json.loads(valid_json_text)
+
             log = LoggingResponseSchema(
-                task="training",
+                task="training_log",
                 model_name=self.repo_id,
-                loss=str(data_dict['loss']), 
-                learning_rate=str(data_dict['learning_rate']), 
-                epoch=str(data_dict['epoch']),
-                )
-            
+                loss=str(data_dict["loss"]),
+                learning_rate=str(data_dict["learning_rate"]),
+                epoch=str(data_dict["epoch"]),
+            )
+
             if self.prev_log.epoch != log.epoch:
                 update_log(log)
                 self.prev_log = log
 
         else:
             progress_response = extract_values(msg, self.repo_id)
-            if progress_response.task != "None" and not progress_response.total.startswith(
-                "0"
+            if (
+                progress_response.task != "None"
+                and not progress_response.total.startswith("0")
             ):
                 update_progress(progress_response)
 
@@ -71,7 +72,7 @@ def extract_values(text: str, repo_id: str) -> ProgressResponseSchema:
         end_time = re.search(end_time_pattern, text).group(1)
         speed = re.search(speed_pattern, text).group(1)
 
-        #print(f"curr_percent: {curr_percent}, total: {total}")
+        # print(f"curr_percent: {curr_percent}, total: {total}")
 
         model_instance = ProgressResponseSchema(
             task="training",
@@ -87,7 +88,7 @@ def extract_values(text: str, repo_id: str) -> ProgressResponseSchema:
         return model_instance
 
     except AttributeError:
-        #print(f"Failed to extract values from text: '{text}'")
+        # print(f"Failed to extract values from text: '{text}'")
         return ProgressResponseSchema.no_progress()
 
     except Exception as e:
