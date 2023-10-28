@@ -331,6 +331,10 @@ async def receive_commands(ws: WebSocket):
         message = await ws.receive_text()
         if message == "stop_training":
             Cache.set(TRAINING_CONTINUE, "False")
+            model_name = Cache.get("{TASK_PREFIX}{TRAINING}")
+            Cache.delete(f"{TASK_PREFIX}{TRAINING}")
+            Cache.delete(model_name)
+            Cache.delete(f"{model_name}_log")
 
 
 @training_router.websocket("/ws/progress")

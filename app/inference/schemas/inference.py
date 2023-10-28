@@ -35,6 +35,7 @@ class MessageRequestSchema(BaseModel):
     top_p: float = 1.0
     repetition_penalty: float = 1.0
     no_repeat_ngram_size: int = 0
+    pdf_file_name: str = ""
 
 
 class MessageResponseSchema(BaseModel):
