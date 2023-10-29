@@ -56,7 +56,7 @@ class Message(Base):
         nullable=True,
     )
     pdf_path = Column(
-        String,
+        String(255),
         default="",
         nullable=True,
     )
