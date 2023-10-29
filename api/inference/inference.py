@@ -110,25 +110,11 @@ async def get_msg_resposne(msg_request: MessageRequestSchema):
     Returns:
         MessageResponseSchema: The result of the inference.
     """
-    response = await execute_inference(msg_request)
-    results = await InferenceService().create_messages(msg_request, response)
+    if msg_request.pdf_file_name == "":
+        response = await execute_inference(msg_request)
+    else:
+        response = await answer_with_pdf(msg_request)
 
-    return results
-
-
-@test_router.post(
-    "/create_message_with_pdf",
-    response_model=List[MessageResponseSchema],
-    responses={"400": {"model": ExceptionResponseSchema}},
-)
-async def get_msg_with_pdf_resposne(msg_request: MessageRequestSchema):
-    """
-    Create message with pdf by user's input
-
-    Returns:
-        MessageResponseSchema: The result of the inference.
-    """
-    response = await answer_with_pdf(msg_request)
     results = await InferenceService().create_messages(msg_request, response)
 
     return results
