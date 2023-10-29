@@ -31,7 +31,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores.chroma import Chroma
 from langchain.retrievers.multi_query import MultiQueryRetriever
 from langchain.llms.huggingface_pipeline import HuggingFacePipeline
-from langchain.chains import RetrievalQAWithSourcesChain
+from langchain.chains import RetrievalQA
 
 
 def get_answer_with_context(
@@ -140,6 +140,7 @@ async def answer_with_pdf(request_schema: MessageRequestSchema):
         tokenizer=tokenizer,
         max_new_tokens=request_schema.max_length,
         model_kwargs={
+            "max_length" : request_schema.max_length,
             "temperature": request_schema.temperature,
             "top_k": request_schema.top_k,
             "top_p": request_schema.top_p,
@@ -147,6 +148,10 @@ async def answer_with_pdf(request_schema: MessageRequestSchema):
             "no_repeat_ngram_size": request_schema.no_repeat_ngram_size,
         },
     )
+
+    if session_model.pm_name == "gpt2":
+        pipe.model.config.pad_token_id = pipe.model.config.eos_token_id
+
     hf_llm = HuggingFacePipeline(pipeline=pipe)
 
     pdf_dir_path = config.PDF_DIR
@@ -157,24 +162,46 @@ async def answer_with_pdf(request_schema: MessageRequestSchema):
     pages = loader.load_and_split()
 
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=300,
-        chunk_overlap=20,
+        chunk_size=100,
+        chunk_overlap=10,
         length_function=len,
         is_separator_regex=False,
     )
 
+    logger.info(f"split...")
     texts = text_splitter.split_documents(pages)
 
+    logger.info(f"texts...{texts}")
+
     # embedding
-    embeddings_model = HuggingFaceEmbeddings()
+    embedding_model_name = "sentence-transformers/all-mpnet-base-v2"
+
+    if request_schema.lang == "ko":
+        embedding_model_name = "jhgan/ko-sroberta-multitask"
+    embeddings_model = HuggingFaceEmbeddings(
+        model_name=embedding_model_name,
+    # model_kwargs={'device': 'cuda'},
+    )
+
+    logger.info(f"embeddings_model...{embeddings_model}")
 
     # load it into Chroma
     db = Chroma.from_documents(texts, embeddings_model)
 
-    qa_chain = RetrievalQAWithSourcesChain.from_chain_type(
-        llm=hf_llm, retriever=db.as_retriever()
+    qa_chain = RetrievalQA.from_chain_type(
+        llm=hf_llm,
+        retriever=db.as_retriever(),
     )
-    result = qa_chain({"question": f"{request_schema.msg}"}, return_only_outputs=True)
 
-    logger.info(f"result {result}")
-    return result
+    logger.info(f"qa_chain...{qa_chain}")
+
+    result = qa_chain( 
+        {
+            "query": f"{request_schema.msg}",
+            "token_max": model.config.max_length,
+        },
+        return_only_outputs=True,
+    )
+
+    logger.info(f"result... {result}")
+    return result['result']

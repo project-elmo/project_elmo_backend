@@ -313,7 +313,6 @@ async def send_progress(ws: WebSocket):
                 if model_name:
                     progress_data: ProgressResponseSchema = Cache.get(key)
                     logging_data: LoggingResponseSchema = Cache.get(f"{key}_log")
-                    logger.info(logging_data)
 
                     if progress_data:
                         await ws.send_json(progress_data)
