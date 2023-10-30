@@ -179,7 +179,7 @@ class TrainingService:
         result = await session.execute(query)
         return result.scalars().all()
 
-    async def insert_initial_data():
+    async def insert_initial_data(self):
         if (
             not session.query(PretrainedModel)
             .filter(PretrainedModel.name == "gpt2")
