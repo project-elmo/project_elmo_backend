@@ -197,21 +197,3 @@ class TrainingService:
             )
             session.add(pretrained_model)
             await session.commit()
-
-        if (
-            not session.query(PretrainedModel)
-            .filter(PretrainedModel.name == "skt/kogpt2-base-v2")
-            .first()
-        ):
-            pretrained_model = PretrainedModel(
-                pm_no=1,
-                name="skt/kogpt2-base-v2",
-                description="SKT/KoGPT2-base-v2 is the Korean version of GPT-2, known for its strong language understanding and generation capabilities in the Korean language.  Advantages: 1. Strong language understanding and generation capabilities in Korean. 2. Broad knowledge across diverse topics in the Korean language. 3. Versatile application for tasks like writing assistance and content generation in Korean.  Disadvantages: 1. Accuracy cannot be guaranteed due to its predictive nature. 2. Human supervision is necessary to ensure quality and accuracy in the generated outputs.",
-                version="1",
-                base_model="gpt2",
-                dl_url="https://huggingface.co/skt/kogpt2-base-v2/resolve/main/pytorch_model.bin",
-                dl_mirror="https://huggingface.co/skt/kogpt2-base-v2/resolve/main/pytorch_model.bin",
-                parameters="parameters",
-            )
-            session.add(pretrained_model)
-            await session.commit()
