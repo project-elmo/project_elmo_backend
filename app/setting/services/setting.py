@@ -33,7 +33,7 @@ class SettingService:
             elmo_setting = ElmoSetting(
                 model_path=setting.model_path,
                 result_path=setting.result_path,
-                is_gpu=torch.cuda.is_available(),            
+                is_gpu=torch.cuda.is_available(),
             )
 
             session.add(elmo_setting)

@@ -57,9 +57,7 @@ class TrainingService:
 
             session.add(ft_model)
             await session.flush()
-            
             logger.info(f'result_metrics["train_loss"] ${result_metrics["train_loss"]}')
-            
             # Create the training parameter
             training_parameter = TrainingParameter.from_schema(
                 training_param,
@@ -180,3 +178,40 @@ class TrainingService:
         query = select(PretrainedModel)
         result = await session.execute(query)
         return result.scalars().all()
+
+    async def insert_initial_data():
+        if (
+            not session.query(PretrainedModel)
+            .filter(PretrainedModel.name == "gpt2")
+            .first()
+        ):
+            pretrained_model = PretrainedModel(
+                pm_no=1,
+                name="gpt2",
+                description="GPT-2 is an advanced language model that can understand and generate human-like text, making it a powerful tool for various language-related tasks.\n\nAdvantages:\n1. Powerful language understanding and generation capabilities.\n2. Broad knowledge across diverse topics.\n3. Versatile application for tasks like writing assistance and content generation.\n\nDisadvantages:\n1. Accuracy cannot be guaranteed due to its predictive nature.\n2. Human supervision is necessary to ensure quality and accuracy in the generated outputs.",
+                version="1",
+                base_model="gpt2",
+                dl_url="https://huggingface.co/gpt2/resolve/main/pytorch_model.bin",
+                dl_mirror="https://huggingface.co/gpt2/resolve/main/pytorch_model.bin",
+                parameters="parameters",
+            )
+            session.add(pretrained_model)
+            await session.commit()
+
+        if (
+            not session.query(PretrainedModel)
+            .filter(PretrainedModel.name == "skt/kogpt2-base-v2")
+            .first()
+        ):
+            pretrained_model = PretrainedModel(
+                pm_no=1,
+                name="skt/kogpt2-base-v2",
+                description="SKT/KoGPT2-base-v2 is the Korean version of GPT-2, known for its strong language understanding and generation capabilities in the Korean language.  Advantages: 1. Strong language understanding and generation capabilities in Korean. 2. Broad knowledge across diverse topics in the Korean language. 3. Versatile application for tasks like writing assistance and content generation in Korean.  Disadvantages: 1. Accuracy cannot be guaranteed due to its predictive nature. 2. Human supervision is necessary to ensure quality and accuracy in the generated outputs.",
+                version="1",
+                base_model="gpt2",
+                dl_url="https://huggingface.co/skt/kogpt2-base-v2/resolve/main/pytorch_model.bin",
+                dl_mirror="https://huggingface.co/skt/kogpt2-base-v2/resolve/main/pytorch_model.bin",
+                parameters="parameters",
+            )
+            session.add(pretrained_model)
+            await session.commit()
