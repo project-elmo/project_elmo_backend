@@ -13,11 +13,7 @@ class SettingService:
     async def get_setting(self) -> ElmoSetting:
         query = select(ElmoSetting).filter(ElmoSetting.set_no == 1)
         result = await session.execute(query)
-        setting: ElmoSetting = result.scalar()
-        setting.is_gpu = torch.cuda.is_available()
-        logger.info(f"setting.is_gpu: {setting.is_gpu}")
-
-        return setting
+        return result.scalar()
 
     async def create_setting(
         self,
@@ -33,7 +29,7 @@ class SettingService:
             elmo_setting = ElmoSetting(
                 model_path=setting.model_path,
                 result_path=setting.result_path,
-                is_gpu=torch.cuda.is_available(),
+                is_gpu=setting.is_gpu_use,
             )
 
             session.add(elmo_setting)
