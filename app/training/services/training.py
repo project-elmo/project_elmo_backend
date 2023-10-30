@@ -180,11 +180,11 @@ class TrainingService:
         return result.scalars().all()
 
     async def insert_initial_data(self):
-        if (
-            not session.query(PretrainedModel)
-            .filter(PretrainedModel.name == "gpt2")
-            .first()
-        ):
+        query = select(PretrainedModel).where(PretrainedModel.name == "gpt2")
+        result = await session.execute(query)
+        record = result.scalar()
+
+        if record == None:
             pretrained_model = PretrainedModel(
                 pm_no=1,
                 name="gpt2",

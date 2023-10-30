@@ -77,7 +77,11 @@ class UserService:
         return response
 
     async def insert_initial_data(self):
-        if not session.query(User).filter(User.user_no == 1).first():
+        query = select(User).where(User.user_no == 1)
+        result = await session.execute(query)
+        record = result.scalar()
+
+        if record == None:
             user = User(
                 id="user",
                 password="user",
