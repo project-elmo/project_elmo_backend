@@ -1,4 +1,5 @@
 from typing import Optional, List
+from pymysql import IntegrityError
 
 from sqlalchemy import or_, select, and_
 
@@ -74,3 +75,24 @@ class UserService:
             refresh_token=TokenHelper.encode(payload={"sub": "refresh"}),
         )
         return response
+
+    async def insert_initial_data(self):
+        query = select(User).where(User.user_no == 1)
+        result = await session.execute(query)
+        record = result.scalar()
+
+        if record == None:
+            user = User(
+                id="user",
+                password="user",
+                email="user@example.com",
+                nickname="user",
+                is_admin=True,
+            )
+            session.add(user)
+
+        try:
+            await session.commit()
+        except IntegrityError as e:
+            await session.rollback()
+            raise e

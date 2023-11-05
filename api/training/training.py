@@ -81,6 +81,9 @@ async def remove_pretrained(model_name: str):
 )
 async def list_all_pretrained_models():
     """Retrieve a list of all pre-trained models."""
+
+    # insert initial data
+    await TrainingService().insert_initial_data()
     models_db = await TrainingService().get_all_pretrained_models()
     huggingface_dir = get_huggingface_dir()
 

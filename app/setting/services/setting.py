@@ -5,6 +5,7 @@ from app.setting.models.setting import ElmoSetting
 from app.setting.schemas.setting import SettingSchema
 from core.helpers.cache.cache_keys import *
 from core.helpers.cache import Cache
+from core.config import config
 
 from core.db import session
 
@@ -13,11 +14,21 @@ class SettingService:
     async def get_setting(self) -> ElmoSetting:
         query = select(ElmoSetting).filter(ElmoSetting.set_no == 1)
         result = await session.execute(query)
-        setting: ElmoSetting = result.scalar()
-        setting.is_gpu = torch.cuda.is_available()
-        logger.info(f"setting.is_gpu: {setting.is_gpu}")
 
-        return setting
+        # init setting
+        if result.scalar() == None:
+            elmo_setting = ElmoSetting(
+                model_path=config.DL_DIR,
+                result_path=config.RESULT_DIR,
+                is_gpu=False,
+            )
+            session.add(elmo_setting)
+            await session.commit()
+            await session.refresh(elmo_setting)
+
+            return elmo_setting
+
+        return result.scalar()
 
     async def create_setting(
         self,
@@ -33,7 +44,7 @@ class SettingService:
             elmo_setting = ElmoSetting(
                 model_path=setting.model_path,
                 result_path=setting.result_path,
-                is_gpu=torch.cuda.is_available(),            
+                is_gpu=setting.is_gpu_use,
             )
 
             session.add(elmo_setting)
