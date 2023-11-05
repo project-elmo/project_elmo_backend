@@ -32,7 +32,7 @@ from langchain.vectorstores.chroma import Chroma
 from langchain.retrievers.multi_query import MultiQueryRetriever
 from langchain.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain.chains import RetrievalQA
-
+from langchain.prompts import PromptTemplate
 
 def get_answer_with_context(
     question: str, context: str, model: PreTrainedModel, tokenizer: PreTrainedTokenizer
@@ -189,9 +189,29 @@ async def answer_with_pdf(request_schema: MessageRequestSchema):
     db = Chroma.from_documents(texts, embeddings_model)
 
     qa_chain = RetrievalQA.from_chain_type(
-        llm=hf_llm,
-        retriever=db.as_retriever(),
-    )
+            llm=hf_llm,
+            retriever=db.as_retriever(),
+        )
+
+    if request_schema.lang == "ko":
+        prompt_template = """다음 문맥을 바탕으로 질문에 답하세요. 답을 모르면 모른다고만 하고, 답을 지어내려고 하지 마세요.
+        
+        {context}
+        
+        질문: {question}
+        도움이 되는 답:"
+        """
+        PROMPT = PromptTemplate(
+            template=prompt_template, input_variables=["context", "question"]
+        )
+
+        chain_type_kwargs = {"prompt": PROMPT}
+
+        qa_chain = RetrievalQA.from_chain_type(
+            llm=hf_llm,
+            retriever=db.as_retriever(),
+            chain_type_kwargs=chain_type_kwargs,
+        )
 
     logger.info(f"qa_chain...{qa_chain}")
 
