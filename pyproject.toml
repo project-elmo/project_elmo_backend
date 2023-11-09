@@ -29,6 +29,10 @@ datasets = "^2.14.4"
 loguru = "^0.7.0"
 python-multipart = "^0.0.6"
 accelerate = "^0.22.0"
+langchain = "^0.0.324"
+sentence-transformers = "^2.2.2"
+pypdf = "^3.16.4"
+chromadb = "^0.4.15"
 
 [tool.poetry.dev-dependencies]
 behave = "^1.2.6"

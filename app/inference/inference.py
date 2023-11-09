@@ -1,3 +1,4 @@
+import os
 from loguru import logger
 import torch
 from transformers import (
@@ -10,6 +11,7 @@ from transformers import (
     PreTrainedTokenizer,
     TrainerCallback,
     TrainerControl,
+    pipeline,
 )
 from app.inference.schemas.inference import MessageRequestSchema
 from app.inference.services.inference import InferenceService
@@ -20,7 +22,17 @@ from app.training.llm.model_util import (
 )
 from app.training.models.training_session import TrainingSession
 from app.setting.services.setting import SettingService
+from core.config import config
 
+from langchain.embeddings import HuggingFaceEmbeddings
+from langchain.document_loaders import PyPDFLoader
+from langchain.document_loaders import WebBaseLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores.chroma import Chroma
+from langchain.retrievers.multi_query import MultiQueryRetriever
+from langchain.llms.huggingface_pipeline import HuggingFacePipeline
+from langchain.chains import RetrievalQA
+from langchain.prompts import PromptTemplate
 
 def get_answer_with_context(
     question: str, context: str, model: PreTrainedModel, tokenizer: PreTrainedTokenizer
@@ -89,7 +101,127 @@ async def execute_inference(request_schema: MessageRequestSchema) -> str:
     prompt = request_schema.msg
 
     response = ""
-    if request_schema.task == 0 or request_schema.task == 2:
+    if request_schema.task == 0 or request_schema.task == 1:
         response = generate_answer(prompt, model, tokenizer, request_schema)
 
     return response
+
+
+# TODO
+def answer_with_web(url: str):
+    loader = WebBaseLoader(url)
+    data = loader.load()
+
+    # Split
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=0)
+    splits = text_splitter.split_documents(data)
+
+    # VectorDB
+    embeddings_model = HuggingFaceEmbeddings()
+    vectordb = Chroma.from_documents(documents=splits, embedding=embeddings_model)
+
+
+async def answer_with_pdf(request_schema: MessageRequestSchema):
+    # init model
+    session_model: TrainingSession = await InferenceService().get_session_by_test_no(
+        request_schema.test_no
+    )
+    model_path = get_model_file_path(
+        session_model.pm_name, session_model.fm_name, session_model.uuid
+    )
+    model = initialize_model(model_path)
+    tokenizer = initialize_tokenizer(session_model.pm_name)
+
+    logger.info(f"making a pipeline... model_path:{model_path}, model:{model.config}")
+    # max_length has typically been deprecated for max_new_tokens
+    pipe = pipeline(
+        "text-generation",
+        model=model,
+        tokenizer=tokenizer,
+        max_new_tokens=request_schema.max_length,
+        model_kwargs={
+            "max_length" : request_schema.max_length,
+            "temperature": request_schema.temperature,
+            "top_k": request_schema.top_k,
+            "top_p": request_schema.top_p,
+            "repetition_penalty": request_schema.repetition_penalty,
+            "no_repeat_ngram_size": request_schema.no_repeat_ngram_size,
+        },
+    )
+
+    if session_model.pm_name == "gpt2":
+        pipe.model.config.pad_token_id = pipe.model.config.eos_token_id
+
+    hf_llm = HuggingFacePipeline(pipeline=pipe)
+
+    pdf_dir_path = config.PDF_DIR
+    path = os.path.join(pdf_dir_path, request_schema.pdf_file_name)
+    loader = PyPDFLoader(path)
+
+    # split the pdf file
+    pages = loader.load_and_split()
+
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=100,
+        chunk_overlap=10,
+        length_function=len,
+        is_separator_regex=False,
+    )
+
+    logger.info(f"split...")
+    texts = text_splitter.split_documents(pages)
+
+    logger.info(f"texts...{texts}")
+
+    # embedding
+    embedding_model_name = "sentence-transformers/all-mpnet-base-v2"
+
+    if request_schema.lang == "ko":
+        embedding_model_name = "jhgan/ko-sroberta-multitask"
+    embeddings_model = HuggingFaceEmbeddings(
+        model_name=embedding_model_name,
+    # model_kwargs={'device': 'cuda'},
+    )
+
+    logger.info(f"embeddings_model...{embeddings_model}")
+
+    # load it into Chroma
+    db = Chroma.from_documents(texts, embeddings_model)
+
+    qa_chain = RetrievalQA.from_chain_type(
+            llm=hf_llm,
+            retriever=db.as_retriever(),
+        )
+
+    if request_schema.lang == "ko":
+        prompt_template = """다음 문맥을 바탕으로 질문에 답하세요. 답을 모르면 모른다고만 하고, 답을 지어내려고 하지 마세요.
+        
+        {context}
+        
+        질문: {question}
+        도움이 되는 답:"
+        """
+        PROMPT = PromptTemplate(
+            template=prompt_template, input_variables=["context", "question"]
+        )
+
+        chain_type_kwargs = {"prompt": PROMPT}
+
+        qa_chain = RetrievalQA.from_chain_type(
+            llm=hf_llm,
+            retriever=db.as_retriever(),
+            chain_type_kwargs=chain_type_kwargs,
+        )
+
+    logger.info(f"qa_chain...{qa_chain}")
+
+    result = qa_chain( 
+        {
+            "query": f"{request_schema.msg}",
+            "token_max": model.config.max_length,
+        },
+        return_only_outputs=True,
+    )
+
+    logger.info(f"result... {result}")
+    return result['result']

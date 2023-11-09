@@ -143,6 +143,11 @@ class InferenceService:
                 is_user=0,
                 test_no=test_request.test_no,
             )
+
+            if test_request.pdf_file_name != "":
+                response.is_pdf = True
+                response.pdf_path = test_request.pdf_file_name
+
             session.add(response)
 
             await session.commit()

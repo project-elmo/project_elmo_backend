@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import Column, DateTime, Float, Integer, ForeignKey, String
+from sqlalchemy import Boolean, Column, DateTime, Float, Integer, ForeignKey, String
 from sqlalchemy.orm import relationship
 
 from core.db import Base
@@ -49,6 +49,16 @@ class Message(Base):
         Integer,
         default=0,
         nullable=False,
+    )
+    is_pdf = Column(
+        Boolean,
+        default=False,
+        nullable=True,
+    )
+    pdf_path = Column(
+        String(255),
+        default="",
+        nullable=True,
     )
 
     test = relationship("Test", back_populates="messages")

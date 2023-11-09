@@ -41,6 +41,8 @@ class TrainingParameterResponseSchema(BaseModel):
     session_no: int = 3
     fm_no: int = 5
     model_name: str
+    task: int
+    train_loss: float
     epochs: int
     save_strategy: str
     logging_strategy: str
@@ -53,3 +55,4 @@ class TrainingParameterResponseSchema(BaseModel):
     save_total_limits: int
     load_best_at_the_end: bool
     dataset: str
+    dataset_download_link: str = None

@@ -35,6 +35,8 @@ class MessageRequestSchema(BaseModel):
     top_p: float = 1.0
     repetition_penalty: float = 1.0
     no_repeat_ngram_size: int = 0
+    pdf_file_name: str = "" # if it's not empty, the model will answer based on the pdf file
+    lang: str = "eng" # eng: English (default), ko: Korean
 
 
 class MessageResponseSchema(BaseModel):

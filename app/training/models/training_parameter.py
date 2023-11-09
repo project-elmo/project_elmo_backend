@@ -24,10 +24,12 @@ class TrainingParameter(Base):
     )
     fm_no = Column(Integer, ForeignKey("finetuning_model.fm_no"), nullable=False)
     model_name = Column(String(255), nullable=False)
+    task = Column(Integer, nullable=False)
     epochs = Column(Integer, nullable=False)
     save_strategy = Column(String(50), nullable=False)
     logging_strategy = Column(String(50), nullable=False)
     evaluation_strategy = Column(String(50), nullable=False)
+    train_loss = Column(Float, nullable=False)
     learning_rate = Column(Float, nullable=False)
     weight_decay = Column(Float, nullable=False)
     batch_size = Column(Integer, nullable=False)
@@ -46,13 +48,16 @@ class TrainingParameter(Base):
         schema: Union[FinetuningRequestSchema, TrainingSessionRequestSchema],
         session_no: int,
         fm_no: int,
+        model_name: str,
+        train_loss: float,
     ):
         return cls(
             session_no=session_no,
             fm_no=fm_no,
-            model_name=schema.pm_name,
             epochs=schema.epochs,
             save_strategy=schema.save_strategy,
+            task=schema.task,
+            train_loss=train_loss,
             logging_strategy=schema.logging_strategy,
             evaluation_strategy=schema.evaluation_strategy,
             learning_rate=schema.learning_rate,
@@ -64,4 +69,5 @@ class TrainingParameter(Base):
             max_length=schema.max_length,
             load_best_at_the_end=schema.load_best_at_the_end,
             dataset=schema.dataset,
+            model_name=model_name,
         )

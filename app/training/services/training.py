@@ -1,9 +1,9 @@
-from typing import List
+from typing import Dict, List, Union
 from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from app.training.models.pretrained_model import PretrainedModel
+from app.training.models.pretrained_model import ModelsResponse, PretrainedModel
 from app.training.schemas.training import (
     FinetuningRequestSchema,
     TrainingSessionRequestSchema,
@@ -20,15 +20,28 @@ class TrainingService:
         start_time: str,  # 2023-08-26T21:04:31
         end_time: str,  # 2023-08-26T21:04:31
         uuid: str,
+        pm_name: str,
+        fm_name: str,
         user_no: int = 1,  # TODO: fix,
         parent_session_no: int = 0,  # This will convert into "". The value of the root node for sessions should be an empty string.
+        result_metrics: Dict[str, Union[str, float, int]] = {},
     ) -> FinetuningModel:
+        """
+        result_metrics:
+        {
+            "train_runtime": 23.4126,
+            "train_samples_per_second": 0.427,
+            "train_steps_per_second": 0.214,
+            "train_loss": 4.258505249023438,
+            "epoch": 1.0
+        }
+        """
         try:
             # Create the fine-tuned model
             ft_model = FinetuningModel(
                 user_no=user_no,
                 pm_no=training_param.pm_no,
-                fm_name=training_param.fm_name,
+                fm_name=fm_name,
                 task=training_param.task,
             )
 
@@ -44,12 +57,14 @@ class TrainingService:
 
             session.add(ft_model)
             await session.flush()
-
+            logger.info(f'result_metrics["train_loss"] ${result_metrics["train_loss"]}')
             # Create the training parameter
             training_parameter = TrainingParameter.from_schema(
                 training_param,
                 session_no=training_session.session_no,
                 fm_no=ft_model.fm_no,
+                model_name=pm_name,
+                train_loss=result_metrics["train_loss"],
             )
             training_session.training_parameter = training_parameter
 
@@ -69,7 +84,20 @@ class TrainingService:
         start_time: str,
         end_time: str,
         uuid: str,
+        pm_name: str,
+        fm_name: str,
+        result_metrics: Dict[str, Union[str, float, int]] = {},
     ) -> TrainingSession:
+        """
+        result_metrics:
+        {
+            "train_runtime": 23.4126,
+            "train_samples_per_second": 0.427,
+            "train_steps_per_second": 0.214,
+            "train_loss": 4.258505249023438,
+            "epoch": 1.0
+        }
+        """
         try:
             # Create the training session
             training_session = TrainingSession(
@@ -86,6 +114,8 @@ class TrainingService:
                 training_param,
                 session_no=training_session.session_no,
                 fm_no=training_param.fm_no,
+                model_name=pm_name,
+                train_loss=result_metrics["train_loss"],
             )
             training_session.training_parameter = training_parameter
 
@@ -118,7 +148,52 @@ class TrainingService:
         record = result.scalar()
         return record
 
+    async def get_pm_name_by_pm_no(self, pm_no: int) -> str:
+        query = select(PretrainedModel.name).where(PretrainedModel.pm_no == pm_no)
+        result = await session.execute(query)
+        record = result.scalar()
+        return record
+
+    async def get_pm_fm_by_fm_no(self, fm_no: int) -> ModelsResponse:
+        query = (
+            select(FinetuningModel, PretrainedModel)
+            .join(
+                PretrainedModel, FinetuningModel.pretrained_model
+            )  # ensure correct relationship join
+            .where(FinetuningModel.fm_no == fm_no)
+        )
+        result = await session.execute(query)
+        finetuning_model_instance, pretrained_model_instance = result.one_or_none()
+
+        if finetuning_model_instance and pretrained_model_instance:
+            return ModelsResponse(
+                finetuning_model=finetuning_model_instance,
+                pretrained_model=pretrained_model_instance,
+            )
+        else:
+            logger.error(f"No matching entry found for fm_no: {fm_no}")
+            return None
+
     async def get_all_pretrained_models(self) -> List[PretrainedModel]:
         query = select(PretrainedModel)
         result = await session.execute(query)
         return result.scalars().all()
+
+    async def insert_initial_data(self):
+        query = select(PretrainedModel).where(PretrainedModel.name == "gpt2")
+        result = await session.execute(query)
+        record = result.scalar()
+
+        if record == None:
+            pretrained_model = PretrainedModel(
+                pm_no=1,
+                name="gpt2",
+                description="GPT-2 is an advanced language model that can understand and generate human-like text, making it a powerful tool for various language-related tasks.\n\nAdvantages:\n1. Powerful language understanding and generation capabilities.\n2. Broad knowledge across diverse topics.\n3. Versatile application for tasks like writing assistance and content generation.\n\nDisadvantages:\n1. Accuracy cannot be guaranteed due to its predictive nature.\n2. Human supervision is necessary to ensure quality and accuracy in the generated outputs.",
+                version="1",
+                base_model="gpt2",
+                dl_url="https://huggingface.co/gpt2/resolve/main/pytorch_model.bin",
+                dl_mirror="https://huggingface.co/gpt2/resolve/main/pytorch_model.bin",
+                parameters="parameters",
+            )
+            session.add(pretrained_model)
+            await session.commit()

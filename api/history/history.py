@@ -1,3 +1,4 @@
+import os
 from typing import List
 from fastapi import (
     APIRouter,
@@ -10,6 +11,7 @@ from app.history.services.history import HistoryService
 from app.user.schemas import ExceptionResponseSchema
 
 history_router = APIRouter()
+
 
 @history_router.get(
     "/finetuned_models",
@@ -50,10 +52,21 @@ async def list_training_sessions_by_fm(fm_no: int):
 async def get_training_parameter_by_session_no(session_no: int):
     """Retrieve training parameters by session number."""
     training_param = await HistoryService().get_training_parameter_by_session(
-        session_no=session_no
+        session_no=session_no,
     )
 
     if not training_param:
         raise HTTPException(status_code=404, detail="Training parameter not found")
 
-    return training_param
+    filename = os.path.basename(training_param.dataset)
+
+    download_link = (
+        f"/download/{filename}"  # adjust this link according to your API's structure
+    )
+
+    response = TrainingParameterResponseSchema(
+        **training_param.__dict__,
+        dataset_download_link=download_link,
+    )
+
+    return response

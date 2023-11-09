@@ -1,9 +1,8 @@
 import os
 import shutil
-from typing import List
+from typing import List, Union
 
 import asyncio
-from typing import Optional
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -16,14 +15,22 @@ from fastapi import (
     File,
 )
 from fastapi.websockets import WebSocketState
+from fastapi.responses import FileResponse
+
 from loguru import logger
 from app.history.schemas.history import (
     FinetuningModelResponseSchema,
     TrainingSessionResponseSchema,
 )
-from app.training.llm.model_trainer import train_model
+from app.training.llm.model_trainer import (
+    extract_columns_from_csv,
+    extract_keys_from_json,
+    train_model,
+)
+
 from app.training.download import hub_download
 from app.training.models import TrainingSession, FinetuningModel
+from app.training.models.pretrained_model import ModelsResponse, PretrainedModel
 from app.training.schemas.training import *
 from app.training.services.training import TrainingService
 from app.user.schemas import ExceptionResponseSchema
@@ -74,6 +81,9 @@ async def remove_pretrained(model_name: str):
 )
 async def list_all_pretrained_models():
     """Retrieve a list of all pre-trained models."""
+
+    # insert initial data
+    await TrainingService().insert_initial_data()
     models_db = await TrainingService().get_all_pretrained_models()
     huggingface_dir = get_huggingface_dir()
 
@@ -100,13 +110,34 @@ async def list_all_pretrained_models():
 
 @training_router.post("/data_upload")
 async def upload_file(file: UploadFile = File(...)):
+    try:
+        datasets_path = config.DATASET_DIR
+        file_location = os.path.join(datasets_path, file.filename)
+
+        logger.info(f"Saving file to {file_location}")
+
+        with open(file_location, "wb+") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        logger.info("File saved successfully.")
+
+        return {"filename": file.filename}
+    except Exception as e:
+        logger.error(f"An error occurred: {str(e)}")
+        raise HTTPException(detail=str(e), status_code=500)
+
+
+@training_router.get("/download/{filename}")
+async def download_dataset(filename: str):
     datasets_path = config.DATASET_DIR
-    file_location = os.path.join(datasets_path, file.filename)
+    file_path = os.path.join(datasets_path, filename)
 
-    with open(file_location, "wb+") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    # Ensure file exists
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
 
-    return {"filename": file.filename}
+    return FileResponse(
+        file_path, filename=filename, media_type="application/octet-stream"
+    )
 
 
 @training_router.get("/get_datasets")
@@ -117,7 +148,9 @@ async def get_datasets():
     if not os.path.isdir(datasets_path):
         raise HTTPException(status_code=404, detail="Datasets directory not found")
 
+    extensions: list = ["csv", "json"]
     datasets = []
+
     for filename in os.listdir(datasets_path):
         if filename == ".gitkeep":
             continue
@@ -126,15 +159,47 @@ async def get_datasets():
 
         if os.path.isfile(file_path):
             _, file_extension = os.path.splitext(filename)
+            if file_extension[1:] not in extensions:
+                continue
+
+            download_link = f"/download/{filename}"
             data = DatasetResponseSchema(
                 file_path=file_path,
                 size=os.path.getsize(file_path),
                 filename=filename,
                 extension=file_extension[1:],
+                download_link=download_link,
             )
             datasets.append(data)
 
     return datasets
+
+
+@training_router.post(
+    "/training/get_data_keys",
+    response_model=GetDatasetKeysResponseSchema,
+    responses={"400": {"model": ExceptionResponseSchema}},
+)
+async def get_data_keys(req: GetDatasetKeysRequestSchema):
+    """
+    Return the column names/keys of the dataset file
+    """
+    if not os.path.exists(req.dataset):
+        raise HTTPException(status_code=404, detail=f"File {req.dataset} not found.")
+
+    # req.dataset is /home/datasets/filname.json(or csv)
+    _, extension = os.path.splitext(req.dataset)
+
+    if extension == ".csv":
+        columns = extract_columns_from_csv(req.dataset)
+        return GetDatasetKeysResponseSchema(keys_in_data=columns)
+    elif extension == ".json":
+        columns = extract_keys_from_json(req.dataset)
+        return GetDatasetKeysResponseSchema(keys_in_data=columns)
+    else:
+        raise HTTPException(
+            status_code=400, detail=f"Unsupported file format: {extension}"
+        )
 
 
 @training_router.post(
@@ -157,12 +222,14 @@ async def start_training(training_param: FinetuningRequestSchema):
     """
     task_key = f"{TASK_PREFIX}{TRAINING}"
 
-    Cache.set(task_key, training_param.pm_name)
+    pm_name: str = await TrainingService().get_pm_name_by_pm_no(training_param.pm_no)
+
+    Cache.set(task_key, pm_name)
     finetuning_model: FinetuningModel = await train_model(
-        training_param, initial_training=True
+        training_param, pm_name, training_param.fm_name, initial_training=True
     )
     Cache.delete(task_key)
-    Cache.delete(f"{training_param.pm_name}_{TRAINING}")
+    Cache.delete(f"{pm_name}_{TRAINING}")
 
     if finetuning_model:
         response = FinetuningModelResponseSchema(
@@ -170,7 +237,7 @@ async def start_training(training_param: FinetuningRequestSchema):
             fm_name=finetuning_model.fm_name,
             user_no=finetuning_model.user_no,
             pm_no=finetuning_model.pm_no,
-            pm_name=training_param.pm_name,
+            pm_name=pm_name,
             fm_description=finetuning_model.fm_description,
         )
         return response
@@ -198,25 +265,31 @@ async def start_re_training(training_param: TrainingSessionRequestSchema):
     """
     task_key = f"{TASK_PREFIX}{TRAINING}"
 
-    Cache.set(task_key, training_param.pm_name)
-    session_model: TrainingSession = await train_model(
-        training_param, initial_training=False
-    )
-    Cache.delete(task_key)
-    Cache.delete(f"{training_param.pm_name}_{TRAINING}")
-    if session_model:
-        response = TrainingSessionResponseSchema(
-            session_no=str(session_model.session_no),
-            fm_no=session_model.fm_no,
-            fm_name=training_param.fm_name,
-            pm_no=session_model.pm_no,
-            pm_name=training_param.pm_name,
-            parent_session_no=str(session_model.parent_session_no),
-            start_time=session_model.start_time,
-            end_time=session_model.end_time,
-            ts_model_name=session_model.ts_model_name,
+    data = await TrainingService().get_pm_fm_by_fm_no(training_param.fm_no)
+
+    if data:
+        fm: FinetuningModel = data["finetuning_model"]
+        pm: PretrainedModel = data["pretrained_model"]
+
+        Cache.set(task_key, pm.name)
+        session_model: TrainingSession = await train_model(
+            training_param, pm.name, fm.fm_name, initial_training=False
         )
-        return response
+        Cache.delete(task_key)
+        Cache.delete(f"{pm.name}_{TRAINING}")
+        if session_model:
+            response = TrainingSessionResponseSchema(
+                session_no=str(session_model.session_no),
+                fm_no=session_model.fm_no,
+                fm_name=fm.fm_name,
+                pm_no=session_model.pm_no,
+                pm_name=pm.name,
+                parent_session_no=str(session_model.parent_session_no),
+                start_time=session_model.start_time,
+                end_time=session_model.end_time,
+                ts_model_name=session_model.ts_model_name,
+            )
+            return response
     else:
         return {"404": {"model": ExceptionResponseSchema}}
 
@@ -238,15 +311,21 @@ async def send_progress(ws: WebSocket):
                         await ws.send_json(result)
                         Cache.delete(key)
                         Cache.delete(task_key)
+                        Cache.delete(f"{key}_log")
             else:
                 if model_name:
                     progress_data: ProgressResponseSchema = Cache.get(key)
+                    logging_data: LoggingResponseSchema = Cache.get(f"{key}_log")
 
                     if progress_data:
                         await ws.send_json(progress_data)
                         Cache.delete(key)
 
-            await asyncio.sleep(0.5)  # send updates every half-second
+                    if logging_data:
+                        await ws.send_json(logging_data)
+                        Cache.delete(f"{key}_log")
+
+            await asyncio.sleep(0.5)
 
 
 async def receive_commands(ws: WebSocket):
@@ -254,6 +333,10 @@ async def receive_commands(ws: WebSocket):
         message = await ws.receive_text()
         if message == "stop_training":
             Cache.set(TRAINING_CONTINUE, "False")
+            model_name = Cache.get("{TASK_PREFIX}{TRAINING}")
+            Cache.delete(f"{TASK_PREFIX}{TRAINING}")
+            Cache.delete(model_name)
+            Cache.delete(f"{model_name}_log")
 
 
 @training_router.websocket("/ws/progress")

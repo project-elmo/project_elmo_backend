@@ -3,19 +3,16 @@ from datetime import datetime
 from loguru import logger
 import uuid
 import requests
-import torch
 import os
+import csv
 import json
+
 from transformers import (
-    GPT2LMHeadModel,
-    AutoTokenizer,
-    AutoModel,
     Trainer,
     TrainingArguments,
     PreTrainedModel,
     PreTrainedTokenizer,
     TrainerCallback,
-    TrainerControl,
 )
 
 from datasets import load_dataset, Dataset
@@ -41,13 +38,12 @@ from core.config import config
 
 async def train_model(
     training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema],
+    pm_name: str,
+    fm_name: str,
     initial_training: bool,
 ) -> Union[FinetuningModel, TrainingSession]:
     # Check if CUDA is available
     device = True if await get_setting_device() == "false" else False
-
-    pm_name = training_param.pm_name
-    fm_name = training_param.fm_name
 
     # Load the pre-trained model and tokenizer
     tokenizer = initialize_tokenizer(pm_name)
@@ -61,20 +57,22 @@ async def train_model(
     # Set Trainer
     training_args = get_training_args(training_param, device)
     trainer: Trainer = setup_training(
-        model, training_args, tokenized_datasets, training_param
+        model, training_args, tokenized_datasets, training_param, pm_name
     )
 
     # Start training
     start_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    Cache.set(TRAINING_CONTINUE, "True")
     logger.info(f"Training started for {pm_name} at {start_time}")
 
     # Send the progress via socket
     result = await send_progress(
-        start_training, trainer, training_param, initial_training
+        start_training, trainer, training_param, initial_training, pm_name, fm_name
     )
 
     end_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
+    result_metrics: Dict[str, Union[str, float, int]] = result[2]
     training_param.ts_model_name = training_param.ts_model_name or get_model_name(
         training_param, result, initial_training
     )
@@ -96,6 +94,9 @@ async def train_model(
                 start_time=start_time,
                 end_time=end_time,
                 uuid=uuid,
+                pm_name=pm_name,
+                fm_name=fm_name,
+                result_metrics=result_metrics,
             )
         )
 
@@ -109,6 +110,9 @@ async def train_model(
             start_time=start_time,
             end_time=end_time,
             uuid=uuid,
+            pm_name=pm_name,
+            fm_name=fm_name,
+            result_metrics=result_metrics,
         )
 
         return session
@@ -121,8 +125,8 @@ def tokenize_qa(
     def _tokenize(batch):
         try:
             encoding = tokenizer(
-                batch["question"],
-                batch["answer"],
+                batch[f"{training_param.keys_to_use[0]}"],
+                batch[f"{training_param.keys_to_use[1]}"],
                 truncation=True,
                 padding="max_length",
                 max_length=training_param.max_length,
@@ -136,13 +140,30 @@ def tokenize_qa(
     return _tokenize
 
 
+def tokenize_classification(
+    tokenizer: PreTrainedTokenizer,
+    training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema],
+):
+    def _tokenize(batch):
+        encoding = tokenizer(
+            batch[f"{training_param.keys_to_use[0]}"],
+            truncation=True,
+            padding="max_length",
+            max_length=training_param.max_length,
+        )
+        encoding["labels"] = batch[f"{training_param.keys_to_use[1]}"]
+        return encoding
+
+    return _tokenize
+
+
 async def send_progress(
     func: Callable[..., NamedTuple], *args: Any, **kwargs: Dict[str, Any]
 ) -> NamedTuple:
     """
     Sends progress metrics of a given function using a socket.
     """
-    model_name = args[1].pm_name
+    model_name = args[3]
     logger.info(f"model_name: {model_name}")
 
     # Send the progress via socket
@@ -197,7 +218,14 @@ async def load_and_tokenize_dataset(
 
     if training_param.task == 0:
         return dataset.map(tokenize_qa(tokenizer, training_param), batched=True)
-    return dataset.map(tokenize_qa(tokenizer, training_param), batched=True)
+    elif training_param.task == 1:
+        return dataset.map(tokenize_qa(tokenizer, training_param), batched=True)
+    elif training_param.task == 2:
+        return dataset.map(
+            tokenize_classification(tokenizer, training_param), batched=True
+        )
+    else:
+        return dataset.map(tokenize_qa(tokenizer, training_param), batched=True)
 
 
 def get_training_args(
@@ -210,8 +238,8 @@ def get_training_args(
         "evaluation_strategy": training_param.evaluation_strategy,
         "learning_rate": training_param.learning_rate,
         "weight_decay": training_param.weight_decay,
-        "logging_strategy": training_param.logging_strategy,
-        "logging_steps": training_param.save_steps,
+        "logging_strategy": "steps",
+        "logging_steps": 1,
         "eval_steps": training_param.eval_steps,
         "save_strategy": training_param.save_strategy,
         "use_cpu": not device,
@@ -228,12 +256,13 @@ def setup_training(
     training_args: TrainingArguments,
     tokenized_datasets: Dataset,
     training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema],
+    pm_name: str,
 ) -> Trainer:
     trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=tokenized_datasets["train"],
-        callbacks=[HealthCheckCallback(training_param.pm_name)],
+        callbacks=[HealthCheckCallback(pm_name)],
     )
 
     return trainer
@@ -243,6 +272,8 @@ async def start_training(
     trainer: Trainer,
     training_param: Union[FinetuningRequestSchema, TrainingSessionRequestSchema],
     initial_training: bool,
+    pm_name: str,
+    fm_name: str,
 ) -> NamedTuple:
     if initial_training:
         result: NamedTuple = trainer.train()
@@ -250,9 +281,7 @@ async def start_training(
         uuid = await TrainingService().get_uuid_by_session_no(
             training_param.parent_session_no
         )
-        resume_from_checkpoint = get_model_file_path(
-            training_param.pm_name, training_param.fm_name, uuid
-        )
+        resume_from_checkpoint = get_model_file_path(pm_name, fm_name, uuid)
         result: NamedTuple = trainer.train(os.path.join(resume_from_checkpoint))
     return result
 
@@ -303,3 +332,15 @@ class HealthCheckCallback(TrainerCallback):
             Cache.delete(f"{self.repo_id}_training")
             logger.debug(f"Training stopped due to stop_training command")
             return
+
+
+def extract_columns_from_csv(file_path: str) -> list:
+    with open(file_path, "r") as f:
+        reader = csv.DictReader(f)
+        return reader.fieldnames
+
+
+def extract_keys_from_json(file_path: str) -> list:
+    with open(file_path, "r") as f:
+        data = json.load(f)
+        return data[0].keys() if isinstance(data, list) and data else []
