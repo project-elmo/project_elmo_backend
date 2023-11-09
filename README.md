@@ -26,6 +26,7 @@ Easy LLM Online Model Optimizer
   <a href="#프로젝트-구조">프로젝트 구조</a> •
   <a href="#사용-방법">사용 방법</a> •
   <a href="#기술-스택">기술 스택</a> •
+  <a href="#기여-방법">기여 방법</a> •
   <a href="#참고-자료">참고 자료</a> •
   <a href="#출처-알림">출처 알림</a>
 </p>
@@ -42,7 +43,9 @@ Easy LLM Online Model Optimizer
 
 인공지능에 대한 배경지식이 없어도 LLM을 학습시켜 나만의 GPT를 만들 수 있는 솔루션 오픈 소스 프로젝트
 
-- 개발 기간: 2023.08 ~ 2023.09 (4주)
+- 개발 기간
+  - 1차: 2023.08 ~ 2023.09 (4주)
+  - 2차: 2023.10 ~ 2023.11 (4주)
 
 ### 1. 개발 배경
 
@@ -78,34 +81,43 @@ Easy LLM Online Model Optimizer
 
 ### 3. 활용 분야
 
-- **마케팅**
-  - 고객의 관심사와 요구에 기반한 맞춤형 마케팅 캠페인 개발
-  - 블로그 글, 뉴스레터 등 제품에 맞춘 콘텐츠 생성
 - **교육**
   - 학생별 맞춤형 학습 자료, 예제 생성
   - 강의, 과제 내용에 대한 질의 응답
 - **기업**
   - 기업의 도메인에 특화된 사내 챗봇 서비스
   - 소규모 기업체의 고객지원 챗봇 서비스
+- **연구**
+  - 논문 요악과 키워드 추출
+  - 사례 연구와 동향 파악
 
 ## 주요 기능
 
 ### 1. 모델 훈련
 
-<img src="https://github.com/project-elmo/frontend/assets/72433681/a5a06711-3546-48ed-a5c2-18a64dc1884f" alt="모델 선택" width="500">
+<img src="https://github.com/project-elmo/frontend/assets/72433681/6c21bb6a-908a-4e6c-a0a9-02efa8c4f73f" alt="목적 선택" width="500">
+
+- 훈련 목적 선택
+  - 질의응답: 질문에 대한 답변 생성
+  - 분류: 텍스트 분류
+
+<img src="https://github.com/project-elmo/frontend/assets/72433681/c08351b6-7311-46ca-a429-3cda50439c1f" alt="모델 선택" width="500">
 
 - pre-trained 모델 선택
   - 모델 목록 표시
   - 모델 다운로드
 
-<img src="https://github.com/project-elmo/frontend/assets/72433681/c9eef064-58d9-4d5e-ab44-d1e923cc0c1e" alt="데이터셋 업로드" width="500">
+<img src="https://github.com/project-elmo/frontend/assets/72433681/ea7810ad-8a2a-4e9f-8394-e983e8d7b34b" alt="데이터셋 업로드" width="500">
+<img src="https://github.com/project-elmo/frontend/assets/72433681/88fe46a1-1e65-4659-8394-1596307ae462" alt="데이터셋 컬럼 또는 키 선택" width="500">
 
-- 데이터셋 업로드
+- 데이터셋 선택
   - JSON, CSV 파일 추가
+  - 기존에 업로드한 파일을 다운로드하여 확인
+  - 데이터셋 파일에서 훈련용으로 사용할 컬럼 또는 키 선택
 
-<img src="https://github.com/project-elmo/frontend/assets/72433681/e52c9c53-f42d-433e-bc8e-ddd5185ca024" alt="파라미터 조정" width="500">
-<img src="https://github.com/project-elmo/frontend/assets/72433681/a14531f8-0ab2-40be-9186-dc1d3858ceb9" alt="모델 훈련 과정" width="500">
-<img src="https://github.com/project-elmo/frontend/assets/72433681/0f180642-39c2-4dd1-9472-d6d5c68bd4b4" alt="모델 훈련 결과" width="500">
+<img src="https://github.com/project-elmo/frontend/assets/72433681/7a3b79b9-0fcb-47f6-8b5e-853f3241b17d" alt="파라미터 조정" width="500">
+<img src="https://github.com/project-elmo/frontend/assets/72433681/95fba068-86f6-4e39-94eb-6d1e2d63b89f" alt="모델 훈련 과정" width="500">
+<img src="https://github.com/project-elmo/frontend/assets/72433681/6ca4f446-59ad-4212-8c0f-70189f7a9981" alt="모델 훈련 결과" width="500">
 
 - 모델 훈련
   - LLM 트레이닝 파라미터 조정
@@ -114,7 +126,7 @@ Easy LLM Online Model Optimizer
 
 ### 2. 모델 관리
 
-<img src="https://github.com/project-elmo/frontend/assets/72433681/502e230a-0aba-4916-b2ac-7d594f0634b7" alt="이전 훈련 결과" width="500">
+<img src="https://github.com/project-elmo/frontend/assets/72433681/9c1bcb2b-c1d6-4f2d-a44f-f12d80abba46" alt="이전 훈련 결과" width="500">
 
 - 이전 훈련 결과 조회
   - 모델 관계를 트리 구조로 표시
@@ -125,16 +137,18 @@ Easy LLM Online Model Optimizer
 
 ### 3. 모델 테스트
 
-<img src="https://github.com/project-elmo/frontend/assets/72433681/2897cbb8-ecc7-449b-a69b-2e5a56e6a7ff" alt="테스트할 모델 선택" width="500">
-<img src="https://github.com/project-elmo/frontend/assets/72433681/e1bfe440-3b57-4604-ab57-552d8534f29e" alt="채팅 형식 테스트" width="500">
+<img src="https://github.com/project-elmo/frontend/assets/72433681/c5dbb72d-83da-41df-8b50-a6b3ade18ca7" alt="테스트할 모델 선택" width="500">
+<img src="https://github.com/project-elmo/frontend/assets/72433681/e19b384e-6452-45cb-ab8f-13c9124753ae" alt="채팅 형식 테스트" width="500">
+<img src="https://github.com/project-elmo/frontend/assets/72433681/17f54772-38bc-4c75-a7a3-2c98cb1ed92f" alt="모델 2개 동시 테스트 및 PDF 업로드" width="500">
 
 - 텍스트 생성
-  - 사용할 모델 선택
+  - 사용할 모델 선택: 2개를 선택하여 비교 가능
   - 채팅 형식 테스트
+  - PDF 파일을 업로드하여 데이터 보완 가능
 
 ## 프로젝트 구조
 
-![image](https://github.com/project-elmo/frontend/assets/72433681/aeebd11b-60ed-4872-add0-9aab406ae8a6)
+![image](https://github.com/project-elmo/frontend/assets/72433681/16577bee-4afa-45b2-8d47-07e74822befe)
 
 ## 사용 방법
 
@@ -266,6 +280,21 @@ Easy LLM Online Model Optimizer
 ![Notion](https://img.shields.io/badge/Notion-FFFFFF.svg?style=for-the-badge&logo=notion&logoColor=black)
 ![Figma](https://img.shields.io/badge/figma-%23F24E1E.svg?style=for-the-badge&logo=figma&logoColor=white)
 ![swagger](https://img.shields.io/badge/swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)
+
+## 기여 방법
+
+### 프로젝트 지향점
+
+1. **인공지능의 대중화**: Project ELMO는 누구나 쉽게 인공지능 모델을 학습시키고 사용할 수 있도록 지원하는 것을 목표로 합니다.
+2. **사용자 중심**: 사용자의 경험을 최우선으로 하여, 누구나 쉽게 접근하고 활용할 수 있는 기능 개발에 집중합니다.
+
+### Pull Request 시 따라야할 가이드
+
+1. **이슈 확인 및 생성**: PR을 시작하기 전에, 이미 존재하는 이슈인지 확인해주세요. 해당 내용에 관한 이슈가 없다면 새로운 이슈를 생성해 주세요.
+2. **명확한 커밋 메시지**: 커밋 메시지는 한눈에 변경사항을 알 수 있도록 명확하게 작성해주세요. 커밋의 주된 내용은 50자 이내로 요약하며, 세부 내용은 본문에 작성합니다.
+3. **코드 스타일 유지**: 기존의 코드 스타일과 포맷을 유지해주세요. 이를 위해 lint 도구나 포맷터를 활용할 수 있습니다.
+4. **문서화**: 기능 추가나 수정에 따라 관련 문서도 업데이트 해주세요. 특히 API나 사용법에 관한 변경 사항은 반드시 문서에 반영되어야 합니다.
+5. **리뷰 반영**: PR 후 리뷰가 있을 경우, 적극적으로 피드백을 반영하거나 의견을 나눠주세요. 상호 존중하는 커뮤니케이션을 지향합니다.
 
 ## 참고 자료
 
