@@ -102,7 +102,6 @@ Easy LLM Online Model Optimizer
 
 - 데이터셋 업로드
   - JSON, CSV 파일 추가
-  - ❗️ 현재 데모에서는 QA(질문-답변) 모델을 훈련할 수 있으며, JSON의 키 값 또는 CSV의 컬럼명이 'question'과 'answer'로 라벨링되어야 함
 
 <img src="https://github.com/project-elmo/frontend/assets/72433681/e52c9c53-f42d-433e-bc8e-ddd5185ca024" alt="파라미터 조정" width="500">
 <img src="https://github.com/project-elmo/frontend/assets/72433681/a14531f8-0ab2-40be-9186-dc1d3858ceb9" alt="모델 훈련 과정" width="500">
